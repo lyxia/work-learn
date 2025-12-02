@@ -14,8 +14,8 @@ interface SettingsState {
 
 const DEFAULT_SETTINGS: AppSettings = {
   taskOptions: [10, 20, 30, 40],
-  restDuration: 300, // 5 minutes
-  timerOverride: 0, // 0 means disabled
+  restDuration: 180, // 5 minutes
+  timerOverride: 10, // 默认每轮1分钟
 };
 
 export const useSettingsStore = create<SettingsState>()(
@@ -30,7 +30,7 @@ export const useSettingsStore = create<SettingsState>()(
         const timerOptions: TimerOption[] = newSettings.taskOptions.map((min, index) => ({
           id: `${min}m`,
           minutes: min,
-          label: `${min}分钟${min >= 40 ? '(含休息)' : ''}`,
+          label: `${min}分钟`,
           color: (index % 2 === 0 ? 'blue' : 'pink') as 'blue' | 'pink',
         }));
         set({ timerOptions });
@@ -41,7 +41,7 @@ export const useSettingsStore = create<SettingsState>()(
         const timerOptions: TimerOption[] = DEFAULT_SETTINGS.taskOptions.map((min, index) => ({
           id: `${min}m`,
           minutes: min,
-          label: `${min}分钟${min >= 40 ? '(含休息)' : ''}`,
+          label: `${min}分钟`,
           color: (index % 2 === 0 ? 'blue' : 'pink') as 'blue' | 'pink',
         }));
         set({ timerOptions });
@@ -59,10 +59,19 @@ export const useSettingsStore = create<SettingsState>()(
         settings: state.settings,
         // isOpen 不持久化
       }),
+      onRehydrateStorage: () => (state) => {
+        // 数据恢复后，初始化 timerOptions
+        if (state) {
+          const timerOptions: TimerOption[] = state.settings.taskOptions.map((min, index) => ({
+            id: `${min}m`,
+            minutes: min,
+            label: `${min}分钟`,
+            color: (index % 2 === 0 ? 'blue' : 'pink') as 'blue' | 'pink',
+          }));
+          state.timerOptions = timerOptions;
+        }
+      },
     }
   )
 );
-
-// 初始化 timerOptions
-useSettingsStore.getState().updateSettings(DEFAULT_SETTINGS);
 

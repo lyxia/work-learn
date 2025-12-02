@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Coins, X, Lock, Unlock, Calendar } from 'lucide-react';
 import { soundEngine } from '../utils/audio';
+import moneyImage from '../assets/money.png';
 
 interface VaultModalProps {
   isOpen: boolean;
@@ -75,7 +76,7 @@ const VaultModal: React.FC<VaultModalProps> = ({ isOpen, totalCoins, onClose, on
                       --- IMAGE REPLACEMENT AREA --- 
                       请将下方的 src 替换为您上传的图片的实际路径或 URL
                    */}
-                   <div className="w-full max-w-sm px-4 h-64 relative mb-2 flex items-center justify-center">
+                   <div className="w-full max-w-sm px-4 relative mb-2 flex items-center justify-center">
                       {/* Glow effect */}
                       <motion.div
                         className="absolute w-48 h-48 bg-yellow-300 rounded-full blur-[60px] opacity-60"
@@ -84,8 +85,7 @@ const VaultModal: React.FC<VaultModalProps> = ({ isOpen, totalCoins, onClose, on
                       />
                       
                       <motion.img 
-                        // TODO: 请替换此 URL 为您实际的图片地址
-                        src="https://placehold.co/600x400/FCD34D/78350F?text=Replace+with+Your+Image"
+                        src={moneyImage}
                         alt="Rich Egg in Vault"
                         className="relative z-10 h-full object-contain drop-shadow-2xl"
                         animate={{ y: [0, -10, 0] }}

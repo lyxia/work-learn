@@ -65,7 +65,7 @@ export const useMultiSessionStore = create<MultiSessionState>((set, get) => ({
     // 判断是否是最后一轮
     if (currentRound === totalRounds) {
       // 最后一轮：计算总奖励并打开结算弹窗
-      const roundDuration = useSettingsStore.getState().settings.timerOverride;
+      const roundDuration = useSettingsStore.getState().settings.timerOverride || 1;
       const totalDuration = totalRounds * roundDuration;
       const sessionRewardsStore = useSessionRewardsStore.getState();
       sessionRewardsStore.calculateRewards(totalDuration);
@@ -83,9 +83,9 @@ export const useMultiSessionStore = create<MultiSessionState>((set, get) => ({
     // totalTime: 当前轮次总时间（秒）
     // 实时显示累计金币：Math.floor((timePassed / 60) * 5)
     const currentRoundCoins = Math.floor((timePassed / 60) * 5);
-    const { completedRounds, accumulatedCoins } = get();
+    const { completedRounds } = get();
     // 累计金币 = 已完成轮次的金币 + 当前轮次实时金币
-    const roundDuration = useSettingsStore.getState().settings.timerOverride;
+    const roundDuration = useSettingsStore.getState().settings.timerOverride || 1;
     const completedRoundsCoins = completedRounds * Math.ceil(roundDuration * 5);
     set({
       accumulatedCoins: completedRoundsCoins + currentRoundCoins,
@@ -94,7 +94,7 @@ export const useMultiSessionStore = create<MultiSessionState>((set, get) => ({
   finishEarly: () => {
     // 提前完成：使用当前 accumulatedCoins 打开结算弹窗
     const { accumulatedCoins, completedRounds } = get();
-    const roundDuration = useSettingsStore.getState().settings.timerOverride;
+    const roundDuration = useSettingsStore.getState().settings.timerOverride || 1;
     const totalDuration = completedRounds * roundDuration;
     
     if (totalDuration > 0) {
