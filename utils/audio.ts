@@ -102,7 +102,7 @@ class SoundEngine {
     }
   }
 
-  playRestStart() {
+  playRestComplete() {
     // Relaxing descending major 7th chord
     // Cmaj7: C(523) B(493) G(392) E(329)
     [523.25, 493.88, 392.00, 329.63].forEach((freq, i) => {
@@ -114,6 +114,11 @@ class SoundEngine {
     // "Ka-ching!" - Two quick metallic/bell sounds
     this.playTone(1200, 'square', 0.1, 0.05);
     setTimeout(() => this.playTone(1600, 'square', 0.3, 0.05), 100);
+  }
+
+  playTick() {
+    // Clock tick sound - short, sharp click
+    this.playTone(1000, 'sine', 0.05, 0.08);
   }
 
   toggleMute() {

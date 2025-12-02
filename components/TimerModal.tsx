@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Coins } from 'lucide-react';
 import EggCharacter from './EggCharacter';
+import { soundEngine } from '../utils/audio';
 
 interface TimerModalProps {
   isOpen: boolean;
@@ -33,6 +34,12 @@ const TimerModal: React.FC<TimerModalProps> = ({
 
   // Internal state for the factory animation loop
   const [productionTick, setProductionTick] = useState(0);
+  
+  // Use ref to track latest timeLeft for tick sound
+  const timeLeftRef = useRef(timeLeft);
+  useEffect(() => {
+    timeLeftRef.current = timeLeft;
+  }, [timeLeft]);
 
   useEffect(() => {
     if (isOpen) {
@@ -40,6 +47,23 @@ const TimerModal: React.FC<TimerModalProps> = ({
         setProductionTick((t) => t + 1);
       }, 2000); // New coin every 2 seconds
       return () => clearInterval(interval);
+    }
+  }, [isOpen]);
+
+  // Play tick sound every second when timer is running
+  useEffect(() => {
+    if (isOpen && timeLeft > 0) {
+      // Play tick immediately when timer starts
+      soundEngine.playTick();
+      
+      // Then play tick every second, but only if timeLeft > 0
+      const tickInterval = setInterval(() => {
+        if (timeLeftRef.current > 0) {
+          soundEngine.playTick();
+        }
+      }, 1000);
+
+      return () => clearInterval(tickInterval);
     }
   }, [isOpen]);
 

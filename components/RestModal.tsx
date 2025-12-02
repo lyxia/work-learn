@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Coffee, Pizza, IceCream, Candy, Coins } from 'lucide-react';
 import eatImage from '../assets/eat.png';
+import { soundEngine } from '../utils/audio';
 
 interface RestModalProps {
   isOpen: boolean;
@@ -23,21 +24,58 @@ const RestModal: React.FC<RestModalProps> = ({
   onComplete,
 }) => {
   const [timeLeft, setTimeLeft] = useState(duration);
+  const intervalRef = useRef<number | null>(null);
+  const hasPlayedSoundRef = useRef(false);
 
   useEffect(() => {
+    // Clean up any existing interval first
+    if (intervalRef.current !== null) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
     if (isOpen) {
       setTimeLeft(duration); // Reset timer with custom duration
-      const interval = setInterval(() => {
+      hasPlayedSoundRef.current = false; // Reset sound flag when modal opens
+      
+      const intervalId = window.setInterval(() => {
         setTimeLeft((prev) => {
+          // Only process if we still have the same interval
+          if (intervalRef.current !== intervalId) {
+            return prev; // Return unchanged if interval was replaced
+          }
+          
           if (prev <= 1) {
-            clearInterval(interval);
+            // Clean up interval first
+            if (intervalRef.current === intervalId) {
+              clearInterval(intervalId);
+              intervalRef.current = null;
+            }
+            // Play rest completion sound only once
+            if (!hasPlayedSoundRef.current) {
+              hasPlayedSoundRef.current = true;
+              console.log('play rest complete');
+              soundEngine.playRestComplete();
+            }
             return 0;
           }
           return prev - 1;
         });
       }, 1000);
-      return () => clearInterval(interval);
+      intervalRef.current = intervalId;
+    } else {
+      // Reset sound flag when modal closes
+      hasPlayedSoundRef.current = false;
     }
+
+    // Cleanup function
+    return () => {
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      hasPlayedSoundRef.current = false;
+    };
   }, [isOpen, duration]);
 
   const handleSkip = () => {
