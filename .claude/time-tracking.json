@@ -1,0 +1,12 @@
+{
+  "sessions": {
+    "41758577-d805-457b-9e1b-b5fd4f62f8c6": {
+      "start_time": "2025-12-02T05:51:23Z",
+      "status": "completed",
+      "session_id": "41758577-d805-457b-9e1b-b5fd4f62f8c6",
+      "end_time": "2025-12-02T08:07:34Z",
+      "duration_seconds": 8171,
+      "duration_formatted": "2h 16m"
+    }
+  }
+}

@@ -1,0 +1,194 @@
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Coins } from 'lucide-react';
+import EggCharacter from './EggCharacter';
+
+interface TimerModalProps {
+  isOpen: boolean;
+  timeLeft: number;
+  totalTime: number;
+  taskName: string;
+  accumulatedCoins: number; // Coins earned in this session so far
+  onCancel: () => void;
+}
+
+const TimerModal: React.FC<TimerModalProps> = ({ 
+  isOpen, timeLeft, totalTime, taskName, accumulatedCoins, onCancel 
+}) => {
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+  // Progress goes from 0 to 1 (0% done to 100% done)
+  const progress = (totalTime - timeLeft) / totalTime;
+  
+  // Internal state for the factory animation loop
+  const [productionTick, setProductionTick] = useState(0);
+
+  useEffect(() => {
+    if (isOpen) {
+      const interval = setInterval(() => {
+        setProductionTick(t => t + 1);
+      }, 2000); // New coin every 2 seconds
+      return () => clearInterval(interval);
+    }
+  }, [isOpen]);
+
+  // Handle Cancel with confirmation
+  const handleGiveUp = () => {
+    if (window.confirm("确定要放弃吗？蛋仔工厂将停止生产金币哦！🥺")) {
+      onCancel();
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex flex-col items-center bg-[#FEF9C3] overflow-hidden"
+        >
+          {/* --- TOP: Coin Storage --- */}
+          <div className="mt-12 mb-8 flex flex-col items-center">
+             <div className="text-gray-400 font-bold mb-2 text-sm tracking-widest uppercase">本次产出</div>
+             <motion.div 
+               key={accumulatedCoins}
+               initial={{ scale: 1.2, color: '#FCD34D' }}
+               animate={{ scale: 1, color: '#4B5563' }}
+               className="flex items-center gap-3 text-4xl font-black font-display text-gray-700 bg-white/50 px-8 py-3 rounded-full border-2 border-white shadow-sm"
+             >
+                <Coins size={36} className="text-[#FCD34D] drop-shadow-sm" fill="#FCD34D" />
+                <span>+{accumulatedCoins}</span>
+             </motion.div>
+          </div>
+
+          {/* --- CENTER: The Coin Factory --- */}
+          <div className="flex-1 w-full max-w-md flex flex-col items-center justify-center relative">
+            
+            {/* The Giant Ring */}
+            <div className="relative w-72 h-72 md:w-96 md:h-96">
+               
+               {/* 1. Progress SVG Ring */}
+               <svg className="absolute inset-0 w-full h-full -rotate-90 z-20 pointer-events-none">
+                 <circle
+                   cx="50%" cy="50%" r="48%"
+                   fill="none"
+                   stroke="#E5E7EB"
+                   strokeWidth="12"
+                 />
+                 <motion.circle
+                   cx="50%" cy="50%" r="48%"
+                   fill="none"
+                   stroke="#38BDF8"
+                   strokeWidth="12"
+                   strokeLinecap="round"
+                   strokeDasharray="300%"
+                   strokeDashoffset={300 * (1 - progress) + "%"}
+                   initial={{ pathLength: 0 }}
+                   animate={{ pathLength: progress }}
+                   transition={{ duration: 1, ease: "linear" }}
+                 />
+               </svg>
+
+               {/* 2. Factory Scene (Inside the hole) */}
+               <div className="absolute inset-4 rounded-full bg-white shadow-inner overflow-hidden border-4 border-gray-100 flex flex-col items-center justify-end z-10">
+                  
+                  {/* Background Grid */}
+                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/graphy.png')] opacity-10" />
+                  
+                  {/* Countdown Text (Floating in background) */}
+                  <div className="absolute top-8 w-full text-center z-0">
+                     <div className="text-5xl font-black text-gray-200 font-display select-none">
+                        {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+                     </div>
+                  </div>
+
+                  {/* --- 3D Production Line --- */}
+                  <div className="relative w-full h-48 perspective-container z-10 flex items-end justify-center pb-4">
+                     
+                     {/* The Stamper Machine */}
+                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-full flex flex-col items-center">
+                        <motion.div 
+                          className="w-4 h-24 bg-gray-400 rounded-b-lg origin-top"
+                          animate={{ height: [60, 100, 60] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                        >
+                           {/* Piston Head */}
+                           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-8 bg-gray-600 rounded-lg shadow-lg border-b-4 border-gray-700" />
+                        </motion.div>
+                     </div>
+
+                     {/* The Egg Worker */}
+                     <div className="absolute left-4 bottom-8 w-20 h-20 z-20">
+                        <EggCharacter state="worker" />
+                     </div>
+
+                     {/* The Conveyor Belt */}
+                     <div className="relative w-full h-16 bg-gray-700 transform rotate-x-12 origin-bottom overflow-hidden border-t-4 border-gray-600 flex items-center shadow-2xl">
+                        {/* Moving belt texture */}
+                        <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_50%,rgba(0,0,0,0.3)_50%)] bg-[length:40px_100%] animate-conveyor" />
+                        
+                        {/* Coins on the belt */}
+                        <AnimatePresence>
+                           <motion.div
+                              key={productionTick}
+                              className="absolute left-1/2 top-1/2 w-10 h-10 -mt-5 -ml-5"
+                              initial={{ x: -150, opacity: 0 }} // Start left
+                              animate={{ 
+                                x: [0, 80], // Move to center, then right
+                                opacity: [0, 1, 1, 0] // Fade in, stay, fade out
+                              }} 
+                              transition={{ duration: 2, times: [0, 0.4, 0.8, 1], ease: "linear" }}
+                           >
+                              {/* The Coin */}
+                              <div className="w-full h-full rounded-full bg-[#FCD34D] border-2 border-[#B45309] shadow-[0_4px_0_#B45309] flex items-center justify-center">
+                                <span className="text-[#B45309] font-bold text-xs">¥</span>
+                              </div>
+                           </motion.div>
+                        </AnimatePresence>
+                     </div>
+                     
+                     {/* Flying Coins to Counter Animation */}
+                     <AnimatePresence>
+                       <motion.div 
+                         key={`fly-${productionTick}`}
+                         className="absolute right-10 bottom-16 w-8 h-8 pointer-events-none z-50"
+                         initial={{ y: 0, scale: 1, opacity: 1 }}
+                         animate={{ y: -300, scale: 0.5, opacity: 0 }}
+                         transition={{ duration: 1.5, ease: "easeOut", delay: 1 }} // Delays to match belt exit
+                       >
+                          <div className="w-full h-full rounded-full bg-[#FCD34D] border border-[#B45309] flex items-center justify-center">
+                             <span className="text-[#B45309] font-bold text-[10px]">$</span>
+                          </div>
+                       </motion.div>
+                     </AnimatePresence>
+
+                  </div>
+               </div>
+            </div>
+
+            {/* Motivational Slogan */}
+            <div className="mt-8 text-center px-6">
+               <p className="text-gray-500 font-medium animate-pulse">
+                 机器运转中... 每一秒都在创造价值！
+               </p>
+            </div>
+          </div>
+
+          {/* --- BOTTOM: Minimal Controls --- */}
+          <div className="mb-8 w-full flex justify-center">
+            <button
+               onClick={handleGiveUp}
+               className="text-gray-400 hover:text-gray-600 text-sm font-medium px-6 py-3 rounded-full hover:bg-gray-200/50 transition-colors"
+            >
+               放弃挑战
+            </button>
+          </div>
+
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+export default TimerModal;

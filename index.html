@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>蛋仔专注岛</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=ZCOOL+KuaiLe&family=Nunito:wght@400;600;700;800&family=Varela+Round&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Nunito"', '"Noto Sans SC"', 'sans-serif'],
+              display: ['"ZCOOL KuaiLe"', '"Varela Round"', '"Noto Sans SC"', 'sans-serif'],
+            },
+            colors: {
+              egg: {
+                yellow: '#FCD34D',
+                blue: '#38BDF8',
+                pink: '#F472B6',
+                bg: '#FEF9C3', // Light yellow bg
+                dark: '#4B5563',
+              }
+            },
+            animation: {
+              'bounce-slow': 'bounce 3s infinite',
+              'spin-slow': 'spin 8s linear infinite',
+              'conveyor': 'conveyor 1s linear infinite',
+            },
+            keyframes: {
+              conveyor: {
+                '0%': { backgroundPosition: '0 0' },
+                '100%': { backgroundPosition: '40px 0' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        background-color: #FEF9C3;
+        background-image: radial-gradient(#FDE047 2px, transparent 2px);
+        background-size: 30px 30px;
+        overflow-x: hidden;
+      }
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #FEF9C3;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #FCD34D;
+        border-radius: 4px;
+      }
+      
+      /* Perspective utils for the factory */
+      .perspective-container {
+        perspective: 500px;
+      }
+      .rotate-x-12 {
+        transform: rotateX(25deg);
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "framer-motion": "https://aistudiocdn.com/framer-motion@^12.23.25",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "canvas-confetti": "https://aistudiocdn.com/canvas-confetti@^1.9.4"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

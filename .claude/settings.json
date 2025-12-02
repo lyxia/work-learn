@@ -1,0 +1,8 @@
+{
+	"env": {
+		"HTTP_PROXY":"http://127.0.0.1:1087",
+		"HTTPS_PROXY":"http://127.0.0.1:1087",
+		"CUSTOM_PROJECT_ROOT":"/Users/liuyunxia/Documents/左思彤/蛋仔专注岛"
+	},
+	"skipWebFetchPreflight":true
+}
