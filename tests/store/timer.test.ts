@@ -28,7 +28,7 @@ describe('Timer Store', () => {
       const state = useTimerStore.getState();
       expect(state.isOpen).toBe(true);
       expect(state.isActive).toBe(true);
-      expect(state.timeLeft).toBe(60);
+      expect(state.timeLeft).toBe(59); // 减1，避免多读1秒
       expect(state.totalTime).toBe(60);
     });
 
@@ -36,7 +36,7 @@ describe('Timer Store', () => {
       const { startTimer } = useTimerStore.getState();
       startTimer(300); // 5分钟
       const state = useTimerStore.getState();
-      expect(state.timeLeft).toBe(300);
+      expect(state.timeLeft).toBe(299); // 减1，避免多读1秒
       expect(state.totalTime).toBe(300);
     });
   });
@@ -46,7 +46,7 @@ describe('Timer Store', () => {
       const { startTimer, tickTimer } = useTimerStore.getState();
       startTimer(60);
       tickTimer();
-      expect(useTimerStore.getState().timeLeft).toBe(59);
+      expect(useTimerStore.getState().timeLeft).toBe(58); // 启动时是59，tick一次后是58
     });
 
     it('应该多次减少时间', () => {
@@ -55,7 +55,7 @@ describe('Timer Store', () => {
       tickTimer();
       tickTimer();
       tickTimer();
-      expect(useTimerStore.getState().timeLeft).toBe(57);
+      expect(useTimerStore.getState().timeLeft).toBe(56); // 启动时是59，tick三次后是56
     });
 
     it('如果计时器未激活，不应该减少时间', () => {
@@ -63,12 +63,13 @@ describe('Timer Store', () => {
       startTimer(60);
       stopTimer();
       tickTimer();
-      expect(useTimerStore.getState().timeLeft).toBe(60);
+      expect(useTimerStore.getState().timeLeft).toBe(59); // 启动时是59，停止后不会减少
     });
 
     it('如果时间为0，不应该继续减少', () => {
       const { startTimer, tickTimer } = useTimerStore.getState();
       startTimer(1);
+      expect(useTimerStore.getState().timeLeft).toBe(0); // 启动时就是0（1-1=0）
       tickTimer();
       expect(useTimerStore.getState().timeLeft).toBe(0);
       tickTimer();
@@ -83,7 +84,7 @@ describe('Timer Store', () => {
       stopTimer();
       expect(useTimerStore.getState().isActive).toBe(false);
       expect(useTimerStore.getState().isOpen).toBe(true);
-      expect(useTimerStore.getState().timeLeft).toBe(60);
+      expect(useTimerStore.getState().timeLeft).toBe(59); // 启动时是59
     });
   });
 
@@ -104,14 +105,14 @@ describe('Timer Store', () => {
     it('应该计算进度百分比', () => {
       const { startTimer, tickTimer, getProgress } = useTimerStore.getState();
       startTimer(100);
-      expect(getProgress()).toBe(0);
+      expect(getProgress()).toBe(1); // (100 - 99) / 100 = 1%
       tickTimer();
-      expect(getProgress()).toBe(1);
+      expect(getProgress()).toBe(2); // (100 - 98) / 100 = 2%
       // 减少50秒
       for (let i = 0; i < 50; i++) {
         tickTimer();
       }
-      expect(getProgress()).toBe(51);
+      expect(getProgress()).toBe(52); // (100 - 48) / 100 = 52%
     });
 
     it('如果总时间为0，进度应该为0', () => {
@@ -134,15 +135,15 @@ describe('Timer Store', () => {
   describe('getMinutesLeft (computed)', () => {
     it('应该计算剩余分钟数', () => {
       const { startTimer, getMinutesLeft } = useTimerStore.getState();
-      startTimer(125); // 2分5秒
+      startTimer(125); // 2分5秒，启动后是124秒（2分4秒）
       expect(getMinutesLeft()).toBe(2);
     });
 
     it('应该正确计算分钟数', () => {
       const { startTimer, getMinutesLeft } = useTimerStore.getState();
-      startTimer(60); // 1分钟
-      expect(getMinutesLeft()).toBe(1);
-      startTimer(59); // 59秒
+      startTimer(60); // 1分钟，启动后是59秒
+      expect(getMinutesLeft()).toBe(0); // 59秒 = 0分钟
+      startTimer(59); // 59秒，启动后是58秒
       expect(getMinutesLeft()).toBe(0);
     });
   });
@@ -150,16 +151,16 @@ describe('Timer Store', () => {
   describe('getSecondsLeft (computed)', () => {
     it('应该计算剩余秒数', () => {
       const { startTimer, getSecondsLeft } = useTimerStore.getState();
-      startTimer(125); // 2分5秒
-      expect(getSecondsLeft()).toBe(5);
+      startTimer(125); // 2分5秒，启动后是124秒（2分4秒）
+      expect(getSecondsLeft()).toBe(4);
     });
 
     it('应该正确计算秒数', () => {
       const { startTimer, getSecondsLeft } = useTimerStore.getState();
-      startTimer(65); // 1分5秒
-      expect(getSecondsLeft()).toBe(5);
-      startTimer(10); // 10秒
-      expect(getSecondsLeft()).toBe(10);
+      startTimer(65); // 1分5秒，启动后是64秒（1分4秒）
+      expect(getSecondsLeft()).toBe(4);
+      startTimer(10); // 10秒，启动后是9秒
+      expect(getSecondsLeft()).toBe(9);
     });
   });
 });

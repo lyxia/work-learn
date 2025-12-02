@@ -34,7 +34,7 @@ export const useTimerStore = create<TimerState>((set, get) => ({
     set({
       isOpen: true,
       isActive: true,
-      timeLeft: duration,
+      timeLeft: duration - 1, // 减1，避免多读1秒
       totalTime: duration,
     });
   },

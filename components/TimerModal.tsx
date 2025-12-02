@@ -29,7 +29,7 @@ const TimerModal: React.FC<TimerModalProps> = ({
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
   // Progress goes from 0 to 1 (0% done to 100% done)
-  const progress = totalTime > 0 ? (totalTime - timeLeft) / totalTime : 0;
+  const progress = totalTime > 0 ? (totalTime - timeLeft + 1) / totalTime : 0;
 
   // Internal state for the factory animation loop
   const [productionTick, setProductionTick] = useState(0);
