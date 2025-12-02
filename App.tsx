@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { Settings, Volume2, VolumeX, Coins, Clock, Zap, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-import EggCharacter from './components/EggCharacter';
 import TimerModal from './components/TimerModal';
 import RestModal from './components/RestModal';
 import SettlementModal from './components/SettlementModal';
@@ -166,15 +165,6 @@ const App: React.FC = () => {
 
     // Create multi-session
     createSession(taskName.trim(), totalDuration, roundDuration);
-  };
-
-  const handleTimerFinish = () => {
-    if (multiSession.isActive) {
-      const roundDuration = settings.timerOverride > 0 ? settings.timerOverride : 1;
-      const roundCoins = Math.ceil(roundDuration * 5);
-      completeCurrentRound(roundCoins);
-      soundEngine.playSuccess();
-    }
   };
 
   const handleSettlementClose = () => {
