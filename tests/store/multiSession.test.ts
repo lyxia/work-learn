@@ -88,7 +88,7 @@ describe('MultiSession Store', () => {
       const timerState = useTimerStore.getState();
       expect(timerState.isOpen).toBe(true);
       expect(timerState.isActive).toBe(true);
-      expect(timerState.timeLeft).toBe(60); // 1分钟 = 60秒
+      expect(timerState.timeLeft).toBe(59); // 1分钟 = 60秒，启动时减1避免多读1秒
     });
   });
 
@@ -107,7 +107,7 @@ describe('MultiSession Store', () => {
       startNextRound();
       const timerState = useTimerStore.getState();
       expect(timerState.isActive).toBe(true);
-      expect(timerState.timeLeft).toBe(60);
+      expect(timerState.timeLeft).toBe(59); // 1分钟 = 60秒，启动时减1避免多读1秒
     });
 
     it('如果是最后一轮，不应该继续', () => {
