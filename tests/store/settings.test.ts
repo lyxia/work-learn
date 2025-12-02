@@ -101,8 +101,8 @@ describe('Settings Store', () => {
       updateSettings(newSettings);
       const state = useSettingsStore.getState();
       expect(state.timerOptions[0].label).toBe('10分钟');
-      expect(state.timerOptions[1].label).toBe('40分钟(含休息)');
-      expect(state.timerOptions[2].label).toBe('50分钟(含休息)');
+      expect(state.timerOptions[1].label).toBe('40分钟');
+      expect(state.timerOptions[2].label).toBe('50分钟');
     });
   });
 
@@ -117,8 +117,8 @@ describe('Settings Store', () => {
       resetSettings();
       const state = useSettingsStore.getState();
       expect(state.settings.taskOptions).toEqual([10, 20, 30, 40]);
-      expect(state.settings.restDuration).toBe(300);
-      expect(state.settings.timerOverride).toBe(0);
+      expect(state.settings.restDuration).toBe(180);
+      expect(state.settings.timerOverride).toBe(10);
     });
 
     it('应该重新计算 timerOptions', () => {
