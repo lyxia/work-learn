@@ -93,9 +93,9 @@ const CoinRecordModal: React.FC<CoinRecordModalProps> = ({ isOpen, onClose }) =>
       return;
     }
 
-    // 验证密码
-    const password = await openPasswordModal({ mode: 'verify' });
-    if (password && verifyPassword(password)) {
+    // 验证密码（弹窗内部会验证并显示错误）
+    const password = await openPasswordModal({ mode: 'verify', verifyFn: verifyPassword });
+    if (password) {
       confirmRecord(record.id);
       addCoins(record.amount);
     }

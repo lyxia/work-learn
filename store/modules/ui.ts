@@ -26,11 +26,14 @@ interface PasswordModalState {
   title: string;
   mode: 'verify' | 'set' | 'change';
   resolver?: (result: string | null) => void;
+  verifyFn?: (password: string) => boolean;
+  showError: boolean;
 }
 
 interface PasswordModalOptions {
   title?: string;
   mode: 'verify' | 'set' | 'change';
+  verifyFn?: (password: string) => boolean;
 }
 
 interface UIState {
@@ -81,6 +84,8 @@ const initialPasswordModal: PasswordModalState = {
   title: '',
   mode: 'verify',
   resolver: undefined,
+  verifyFn: undefined,
+  showError: false,
 };
 
 export const useUIStore = create<UIState>((set, get) => ({
@@ -212,6 +217,8 @@ export const useUIStore = create<UIState>((set, get) => ({
           title,
           mode: options.mode,
           resolver: resolve,
+          verifyFn: options.verifyFn,
+          showError: false,
         },
       });
     });

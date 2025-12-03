@@ -30,9 +30,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   const handleChangePassword = async () => {
-    // 先验证旧密码
-    const oldPassword = await openPasswordModal({ mode: 'verify', title: '请输入当前密码' });
-    if (!oldPassword || !verifyPassword(oldPassword)) {
+    // 先验证旧密码（弹窗内部会验证并显示错误）
+    const oldPassword = await openPasswordModal({ mode: 'verify', title: '请输入当前密码', verifyFn: verifyPassword });
+    if (!oldPassword) {
       return;
     }
     // 设置新密码
@@ -43,9 +43,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   const handleClearPassword = async () => {
-    // 先验证密码
-    const password = await openPasswordModal({ mode: 'verify' });
-    if (!password || !verifyPassword(password)) {
+    // 先验证密码（弹窗内部会验证并显示错误）
+    const password = await openPasswordModal({ mode: 'verify', verifyFn: verifyPassword });
+    if (!password) {
       return;
     }
     // 确认清除

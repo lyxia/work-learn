@@ -53,10 +53,10 @@ const VaultModal: React.FC<VaultModalProps> = ({ isOpen, totalCoins, onClose, on
       }
     }
 
-    // 如果设置了密码，需要验证
+    // 如果设置了密码，需要验证（弹窗内部会验证并显示错误）
     if (isPasswordSet) {
-      const password = await openPasswordModal({ mode: 'verify' });
-      if (!password || !verifyPassword(password)) {
+      const password = await openPasswordModal({ mode: 'verify', verifyFn: verifyPassword });
+      if (!password) {
         return;
       }
     }

@@ -499,6 +499,7 @@ const App: React.FC = () => {
         isOpen={passwordModalState.isOpen}
         title={passwordModalState.title}
         mode={passwordModalState.mode}
+        verifyFn={passwordModalState.verifyFn}
         onConfirm={confirmPasswordModal}
         onCancel={cancelPasswordModal}
       />

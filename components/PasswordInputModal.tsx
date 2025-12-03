@@ -7,6 +7,7 @@ interface PasswordInputModalProps {
   isOpen: boolean;
   title: string;
   mode: 'verify' | 'set' | 'change';
+  verifyFn?: (password: string) => boolean;
   onConfirm: (password: string) => void;
   onCancel: () => void;
 }
@@ -15,11 +16,13 @@ const PasswordInputModal: React.FC<PasswordInputModalProps> = ({
   isOpen,
   title,
   mode,
+  verifyFn,
   onConfirm,
   onCancel,
 }) => {
   const [digits, setDigits] = useState<string[]>(['', '', '', '']);
   const [error, setError] = useState(false);
+  const [verifyError, setVerifyError] = useState(false);
   const [confirmDigits, setConfirmDigits] = useState<string[]>(['', '', '', '']);
   const [isConfirmStep, setIsConfirmStep] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -31,6 +34,7 @@ const PasswordInputModal: React.FC<PasswordInputModalProps> = ({
       setDigits(['', '', '', '']);
       setConfirmDigits(['', '', '', '']);
       setError(false);
+      setVerifyError(false);
       setIsConfirmStep(false);
       setTimeout(() => {
         inputRefs.current[0]?.focus();
@@ -50,6 +54,7 @@ const PasswordInputModal: React.FC<PasswordInputModalProps> = ({
       setDigits(newDigits);
     }
     setError(false);
+    setVerifyError(false);
 
     // 自动跳到下一个输入框
     if (value && index < 3) {
@@ -62,8 +67,22 @@ const PasswordInputModal: React.FC<PasswordInputModalProps> = ({
       const password = newDigits.join('');
 
       if (mode === 'verify') {
-        // 验证模式：直接提交
-        onConfirm(password);
+        // 验证模式：如果提供了验证函数，先验证
+        if (verifyFn) {
+          if (verifyFn(password)) {
+            onConfirm(password);
+          } else {
+            // 验证失败：显示错误，触发震动，清空输入
+            setVerifyError(true);
+            setDigits(['', '', '', '']);
+            setTimeout(() => {
+              inputRefs.current[0]?.focus();
+            }, 100);
+          }
+        } else {
+          // 没有验证函数，直接提交
+          onConfirm(password);
+        }
       } else if (mode === 'set' || mode === 'change') {
         if (!isConfirm) {
           // 设置/修改模式第一步：进入确认步骤
@@ -102,6 +121,8 @@ const PasswordInputModal: React.FC<PasswordInputModalProps> = ({
   const renderDigitInputs = (isConfirm: boolean = false) => {
     const currentDigits = isConfirm ? confirmDigits : digits;
     const refs = isConfirm ? confirmInputRefs : inputRefs;
+    // 判断是否显示错误状态：确认步骤的错误 或 验证模式的错误
+    const showError = (error && isConfirm) || (verifyError && !isConfirm && mode === 'verify');
 
     return (
       <div className="flex justify-center gap-3">
@@ -115,10 +136,10 @@ const PasswordInputModal: React.FC<PasswordInputModalProps> = ({
             value={digit}
             onChange={(e) => handleDigitChange(index, e.target.value, isConfirm)}
             onKeyDown={(e) => handleKeyDown(index, e, isConfirm)}
-            animate={error && isConfirm ? { x: [-5, 5, -5, 5, 0] } : {}}
+            animate={showError ? { x: [-5, 5, -5, 5, 0] } : {}}
             transition={{ duration: 0.3 }}
             className={`w-14 h-16 text-center text-3xl font-bold rounded-2xl border-4 outline-none transition-all
-              ${error && isConfirm
+              ${showError
                 ? 'border-red-400 bg-red-50'
                 : digit
                 ? 'border-[#FCD34D] bg-[#FFFBEB]'
@@ -185,6 +206,15 @@ const PasswordInputModal: React.FC<PasswordInputModalProps> = ({
                     {mode === 'verify' ? '请输入4位数字密码' : '请设置4位数字密码'}
                   </p>
                   {renderDigitInputs(false)}
+                  {verifyError && mode === 'verify' && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-center text-red-500 font-bold text-sm"
+                    >
+                      密码错误，请重新输入
+                    </motion.p>
+                  )}
                 </>
               ) : (
                 <>
