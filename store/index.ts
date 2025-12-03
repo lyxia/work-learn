@@ -6,4 +6,6 @@ export { useTaskStore } from './modules/task';
 export { useTimerStore } from './modules/timer';
 export { useSessionRewardsStore } from './modules/sessionRewards';
 export { useMultiSessionStore } from './modules/multiSession';
+export { useParentAuthStore } from './modules/parentAuth';
+export { useCoinRecordStore } from './modules/coinRecord';
 

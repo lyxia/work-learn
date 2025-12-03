@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Settings, RotateCcw, Check } from 'lucide-react';
+import { X, Settings, RotateCcw, Check, Lock, KeyRound, Trash2 } from 'lucide-react';
 import { AppSettings } from '../types';
+import { useParentAuthStore, useUIStore } from '../store';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -11,12 +12,53 @@ interface SettingsModalProps {
   onReset: () => void | Promise<void>;
 }
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ 
-  isOpen, settings, onSave, onClose, onReset 
+const SettingsModal: React.FC<SettingsModalProps> = ({
+  isOpen, settings, onSave, onClose, onReset
 }) => {
   const [timerOverride, setTimerOverride] = useState<string>('');
   const [restDuration, setRestDuration] = useState<string>('');
   const [taskOptionsStr, setTaskOptionsStr] = useState<string>('');
+
+  const { isPasswordSet, setPassword, clearPassword, verifyPassword } = useParentAuthStore();
+  const { openPasswordModal, openConfirm } = useUIStore();
+
+  const handleSetPassword = async () => {
+    const password = await openPasswordModal({ mode: 'set' });
+    if (password) {
+      setPassword(password);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    // 先验证旧密码
+    const oldPassword = await openPasswordModal({ mode: 'verify', title: '请输入当前密码' });
+    if (!oldPassword || !verifyPassword(oldPassword)) {
+      return;
+    }
+    // 设置新密码
+    const newPassword = await openPasswordModal({ mode: 'set', title: '设置新密码' });
+    if (newPassword) {
+      setPassword(newPassword);
+    }
+  };
+
+  const handleClearPassword = async () => {
+    // 先验证密码
+    const password = await openPasswordModal({ mode: 'verify' });
+    if (!password || !verifyPassword(password)) {
+      return;
+    }
+    // 确认清除
+    const confirmed = await openConfirm({
+      title: '清除密码',
+      message: '确定要清除家长密码吗？清除后专注收入将直接入账，无需确认。',
+      confirmLabel: '确定清除',
+      cancelLabel: '取消',
+    });
+    if (confirmed) {
+      clearPassword();
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -136,6 +178,51 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 <p className="text-xs text-gray-400 font-bold">
                   用逗号分隔，例如: 10, 20, 30
                 </p>
+              </div>
+
+              {/* Field 4: Parent Password */}
+              <div className="bg-white p-4 rounded-3xl border-4 border-[#E5E7EB] transition-colors shadow-sm">
+                <label className="block text-[#78350F] font-black mb-3 text-lg flex items-center gap-2">
+                  <Lock size={20} />
+                  家长密码
+                </label>
+                {isPasswordSet ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-2 rounded-xl">
+                      <Check size={18} />
+                      <span className="font-bold">已设置密码</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleChangePassword}
+                        className="flex-1 py-2 px-3 rounded-xl bg-[#FCD34D] border-b-4 border-[#B45309] text-[#78350F] font-bold active:border-b-0 active:translate-y-[4px] transition-all flex items-center justify-center gap-1 text-sm"
+                      >
+                        <KeyRound size={16} />
+                        修改密码
+                      </button>
+                      <button
+                        onClick={handleClearPassword}
+                        className="py-2 px-3 rounded-xl bg-white border-2 border-red-300 border-b-4 text-red-500 font-bold active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-1 text-sm"
+                      >
+                        <Trash2 size={16} />
+                        清除
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-sm text-gray-500">
+                      设置密码后，专注收入需要家长确认才能入账
+                    </p>
+                    <button
+                      onClick={handleSetPassword}
+                      className="w-full py-3 px-4 rounded-xl bg-gradient-to-b from-[#FCD34D] to-[#F59E0B] border-b-4 border-[#B45309] text-white font-bold active:border-b-0 active:translate-y-[4px] transition-all flex items-center justify-center gap-2"
+                    >
+                      <KeyRound size={18} />
+                      设置家长密码
+                    </button>
+                  </div>
+                )}
               </div>
 
             </div>

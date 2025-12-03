@@ -1,0 +1,92 @@
+{
+  "currentState": "initial",
+  "stateHistory": [
+    {
+      "from": "initial",
+      "command": "project",
+      "timestamp": "2025-12-03T10:40:25.366Z",
+      "args": [
+        {
+          "workingDirectory": "/Users/liuyunxia/Documents/左思彤/蛋仔专注岛",
+          "ideType": "cursor"
+        }
+      ]
+    },
+    {
+      "from": "initial",
+      "command": "discover",
+      "timestamp": "2025-12-03T10:40:29.092Z",
+      "args": []
+    },
+    {
+      "from": "initial",
+      "command": "action",
+      "timestamp": "2025-12-03T10:40:32.984Z",
+      "args": [
+        "assistant"
+      ]
+    },
+    {
+      "from": "initial",
+      "command": "remember",
+      "timestamp": "2025-12-03T10:40:37.470Z",
+      "args": [
+        {
+          "role": "assistant",
+          "engrams": [
+            {
+              "content": "用户希望先通过加日志排查休息倒计时卡死问题，暂不做其他改动。",
+              "schema": "用户 要求 日志 排查 休息卡死",
+              "strength": 0.7,
+              "type": "ATOMIC"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "from": "initial",
+      "command": "recall",
+      "timestamp": "2025-12-03T10:40:48.219Z",
+      "args": [
+        {
+          "role": "assistant",
+          "query": null,
+          "mode": "balanced"
+        }
+      ]
+    },
+    {
+      "from": "initial",
+      "command": "recall",
+      "timestamp": "2025-12-03T10:40:55.074Z",
+      "args": [
+        {
+          "role": "assistant",
+          "query": "日志 排查",
+          "mode": "focused"
+        }
+      ]
+    },
+    {
+      "from": "initial",
+      "command": "toolx",
+      "timestamp": "2025-12-03T10:41:02.075Z",
+      "args": [
+        "@tool://todo-manager-v2",
+        "manual"
+      ]
+    },
+    {
+      "from": "initial",
+      "command": "toolx",
+      "timestamp": "2025-12-03T10:41:07.267Z",
+      "args": [
+        "@tool://todo-manager-v2",
+        "execute",
+        "{\"action\":\"list\",\"csvPath\":\"/Users/liuyunxia/Documents/左思彤/蛋仔专注岛/.promptx/resource/todo-manager-v2.csv\"}"
+      ]
+    }
+  ],
+  "lastUpdated": "2025-12-03T10:41:07.291Z"
+}

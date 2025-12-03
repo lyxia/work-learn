@@ -13,6 +13,7 @@ interface MultiSessionState {
   isActive: boolean;
   roundDuration: number; // 标准每轮时长（分钟）
   lastRoundDuration: number; // 最后一轮时长（分钟），可能与标准时长不同
+  sessionStartTime: number; // 会话开始时间戳
   createSession: (taskName: string, totalDuration: number, roundDuration: number) => void;
   startNextRound: () => void;
   completeCurrentRound: (roundCoins: number) => void;
@@ -31,6 +32,7 @@ export const useMultiSessionStore = create<MultiSessionState>((set, get) => ({
   isActive: false,
   roundDuration: 0,
   lastRoundDuration: 0,
+  sessionStartTime: 0,
   createSession: (taskName: string, totalDuration: number, roundDuration: number) => {
     // 使用秒作为基准单位进行计算，避免浮点数精度问题
     const totalDurationSeconds = Math.round(totalDuration * 60);
@@ -54,6 +56,7 @@ export const useMultiSessionStore = create<MultiSessionState>((set, get) => ({
       isActive: true,
       roundDuration,
       lastRoundDuration,
+      sessionStartTime: Date.now(),
     });
     // 开始第1轮（第一轮始终使用标准时长，除非只有一轮）
     const timerStore = useTimerStore.getState();
@@ -130,6 +133,7 @@ export const useMultiSessionStore = create<MultiSessionState>((set, get) => ({
       isActive: false,
       roundDuration: 0,
       lastRoundDuration: 0,
+      sessionStartTime: 0,
     });
     // 重置相关模块
     const timerStore = useTimerStore.getState();

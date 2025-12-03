@@ -9,6 +9,8 @@ import SettlementModal from './components/SettlementModal';
 import VaultModal from './components/VaultModal';
 import SettingsModal from './components/SettingsModal';
 import ConfirmModal from './components/ConfirmModal';
+import PasswordInputModal from './components/PasswordInputModal';
+import CoinRecordModal from './components/CoinRecordModal';
 import Footer from './components/Footer';
 import { soundEngine } from './utils/audio';
 import {
@@ -19,6 +21,7 @@ import {
   useTimerStore,
   useSessionRewardsStore,
   useMultiSessionStore,
+  useCoinRecordStore,
 } from './store';
 
 const App: React.FC = () => {
@@ -56,15 +59,20 @@ const App: React.FC = () => {
   const restModalOpen = useUIStore((state) => state.restModal.isOpen);
   const vaultModalOpen = useUIStore((state) => state.vaultModal.isOpen);
   const confirmModalState = useUIStore((state) => state.confirmModal);
+  const passwordModalState = useUIStore((state) => state.passwordModal);
+  const coinRecordModalOpen = useUIStore((state) => state.coinRecordModal.isOpen);
   const openSettlementModal = useUIStore((state) => state.openSettlementModal);
   const closeSettlementModal = useUIStore((state) => state.closeSettlementModal);
   const openRestModal = useUIStore((state) => state.openRestModal);
   const closeRestModal = useUIStore((state) => state.closeRestModal);
   const openVaultModal = useUIStore((state) => state.openVaultModal);
   const closeVaultModal = useUIStore((state) => state.closeVaultModal);
+  const closeCoinRecordModal = useUIStore((state) => state.closeCoinRecordModal);
   const openConfirm = useUIStore((state) => state.openConfirm);
   const confirmConfirmModal = useUIStore((state) => state.confirmConfirmModal);
   const cancelConfirmModal = useUIStore((state) => state.cancelConfirmModal);
+  const confirmPasswordModal = useUIStore((state) => state.confirmPasswordModal);
+  const cancelPasswordModal = useUIStore((state) => state.cancelPasswordModal);
 
   const baseCoins = useSessionRewardsStore((state) => state.baseCoins);
   const bonusCoins = useSessionRewardsStore((state) => state.bonusCoins);
@@ -83,6 +91,9 @@ const App: React.FC = () => {
   const finishEarly = useMultiSessionStore((state) => state.finishEarly);
   const cancelSession = useMultiSessionStore((state) => state.cancel);
   const resetSession = useMultiSessionStore((state) => state.reset);
+  const sessionStartTime = useMultiSessionStore((state) => state.sessionStartTime);
+
+  const addPendingIncome = useCoinRecordStore((state) => state.addPendingIncome);
 
   const timerRef = useRef<number | null>(null);
 
@@ -189,8 +200,20 @@ const App: React.FC = () => {
   };
 
   const handleSettlementClose = () => {
-    // Add coins to wallet
-    addCoins(baseCoins + bonusCoins);
+    // 创建待确认收入记录（不再直接入账）
+    const totalDuration = multiSessionCompletedRounds * (settings.timerOverride || 1);
+    addPendingIncome(
+      {
+        taskName: multiSessionTaskName,
+        startTime: sessionStartTime,
+        endTime: Date.now(),
+        focusDuration: totalDuration,
+        baseCoins,
+        bonusCoins,
+      },
+      baseCoins + bonusCoins
+    );
+
     closeSettlementModal();
 
     // Reset session
@@ -469,6 +492,21 @@ const App: React.FC = () => {
         showCancel={confirmModalState.showCancelButton}
         onConfirm={confirmConfirmModal}
         onCancel={cancelConfirmModal}
+      />
+
+      {/* Password Input Modal */}
+      <PasswordInputModal
+        isOpen={passwordModalState.isOpen}
+        title={passwordModalState.title}
+        mode={passwordModalState.mode}
+        onConfirm={confirmPasswordModal}
+        onCancel={cancelPasswordModal}
+      />
+
+      {/* Coin Record Modal */}
+      <CoinRecordModal
+        isOpen={coinRecordModalOpen}
+        onClose={closeCoinRecordModal}
       />
     </div>
   );

@@ -38,49 +38,72 @@ const RestModal: React.FC<RestModalProps> = ({
   const startInterval = useCallback(() => {
     const intervalId = window.setInterval(() => {
       setTimeLeft((prev) => {
-        if (intervalRef.current !== intervalId) {
-          return prev;
-        }
-
-        if (prev <= 1) {
-          if (intervalRef.current === intervalId) {
-            clearInterval(intervalId);
-            intervalRef.current = null;
-          }
-          if (!hasPlayedSoundRef.current) {
-            hasPlayedSoundRef.current = true;
-            soundEngine.playRestComplete();
-          }
+        if (prev <= 0) {
           return 0;
         }
-
-        return prev - 1;
+        const next = prev - 1;
+        console.log('[RestModal] tick', { prev, next, intervalId });
+        return next;
       });
     }, 1000);
 
+    console.log('[RestModal] startInterval', { intervalId });
     intervalRef.current = intervalId;
   }, []);
 
+  // 监听计时结束，清除 interval 并播放音效
   useEffect(() => {
+    if (timeLeft === 0 && intervalRef.current !== null) {
+      console.log('[RestModal] timeLeft reached 0, clearing interval', {
+        intervalRef: intervalRef.current,
+      });
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+
+      if (!hasPlayedSoundRef.current) {
+        hasPlayedSoundRef.current = true;
+        console.log('[RestModal] playing rest complete sound');
+        soundEngine.playRestComplete();
+      }
+    }
+  }, [timeLeft]);
+
+  useEffect(() => {
+    console.log('[RestModal] isOpen effect triggered', {
+      isOpen,
+      duration,
+      intervalRef: intervalRef.current,
+      confirmOpenRef: confirmOpenRef.current,
+    });
+
     // Clean up any existing interval first
     if (intervalRef.current !== null) {
+      console.log('[RestModal] clearing existing interval in isOpen effect', {
+        intervalRef: intervalRef.current,
+      });
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
 
     if (isOpen) {
+      console.log('[RestModal] modal opened, resetting timer', { duration });
       setTimeLeft(duration); // Reset timer with custom duration
       hasPlayedSoundRef.current = false; // Reset sound flag when modal opens
       if (!confirmOpenRef.current) {
+        console.log('[RestModal] confirm not open, starting interval');
         startInterval();
+      } else {
+        console.log('[RestModal] confirm is open, NOT starting interval');
       }
     } else {
+      console.log('[RestModal] modal closed');
       // Reset sound flag when modal closes
       hasPlayedSoundRef.current = false;
     }
 
     // Cleanup function
     return () => {
+      console.log('[RestModal] isOpen effect cleanup', { intervalRef: intervalRef.current });
       if (intervalRef.current !== null) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
@@ -90,12 +113,24 @@ const RestModal: React.FC<RestModalProps> = ({
   }, [isOpen, duration, startInterval]);
 
   useEffect(() => {
+    console.log('[RestModal] isConfirmOpen effect triggered', {
+      isOpen,
+      isConfirmOpen,
+      timeLeft,
+      intervalRef: intervalRef.current,
+    });
+
     if (!isOpen) {
+      console.log('[RestModal] isConfirmOpen effect: modal not open, returning');
       return;
     }
 
     if (isConfirmOpen) {
+      console.log('[RestModal] confirm opened, pausing timer');
       if (intervalRef.current !== null) {
+        console.log('[RestModal] clearing interval due to confirm open', {
+          intervalRef: intervalRef.current,
+        });
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
@@ -103,7 +138,13 @@ const RestModal: React.FC<RestModalProps> = ({
     }
 
     if (intervalRef.current === null && timeLeft > 0) {
+      console.log('[RestModal] confirm closed and no interval running, restarting', { timeLeft });
       startInterval();
+    } else {
+      console.log('[RestModal] isConfirmOpen effect: no action needed', {
+        intervalRef: intervalRef.current,
+        timeLeft,
+      });
     }
   }, [isOpen, isConfirmOpen, timeLeft, startInterval]);
 

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Coins, X, Lock, Unlock, Calendar } from 'lucide-react';
+import { Coins, X, Lock, Unlock, Calendar, FileText, Clock } from 'lucide-react';
 import { soundEngine } from '../utils/audio';
 import moneyImage from '../assets/money.png';
-import { useUIStore } from '../store';
+import { useUIStore, useParentAuthStore, useCoinRecordStore } from '../store';
 
 interface VaultModalProps {
   isOpen: boolean;
@@ -15,42 +15,62 @@ interface VaultModalProps {
 const VaultModal: React.FC<VaultModalProps> = ({ isOpen, totalCoins, onClose, onRedeem }) => {
   const REDEMPTION_COST = 1000;
   const isWeekend = new Date().getDay() === 0 || new Date().getDay() === 6; // Sunday(0) or Saturday(6)
-  
+
   // Progress Calculation
   const progress = Math.min(totalCoins / REDEMPTION_COST, 1);
   const coinsNeeded = Math.max(0, REDEMPTION_COST - totalCoins);
   const canRedeem = totalCoins >= REDEMPTION_COST;
 
-   const openConfirm = useUIStore((state) => state.openConfirm);
+  const { openConfirm, openPasswordModal, openCoinRecordModal } = useUIStore();
+  const { isPasswordSet, verifyPassword } = useParentAuthStore();
+  const addExpense = useCoinRecordStore((state) => state.addExpense);
+  // 直接订阅records状态，确保待确认数量实时更新
+  const records = useCoinRecordStore((state) => state.records);
+  const pendingCount = records.filter((r) => r.type === 'income' && r.status === 'pending').length;
 
-   const handleRedeemClick = async () => {
-      if (!canRedeem) return;
+  const handleRedeemClick = async () => {
+    if (!canRedeem) return;
 
-      if (!isWeekend) {
-         const confirmed = await openConfirm({
-            title: '工作日提醒',
-            message: '虽然金币够了，但今天是工作日哦！确定要现在兑换吗？（通常周末才兑换游戏时间哦）',
-            confirmLabel: '坚持兑换',
-            cancelLabel: '等到周末',
-         });
-         if (!confirmed) {
-            return;
-         }
-      } else {
-         const confirmed = await openConfirm({
-            title: '兑换确认',
-            message: '确定要消耗1000蛋币兑换30分钟自由娱乐时间吗？需家长确认哦！',
-            confirmLabel: '确认兑换',
-            cancelLabel: '再想想',
-         });
-         if (!confirmed) {
-            return;
-         }
+    if (!isWeekend) {
+      const confirmed = await openConfirm({
+        title: '工作日提醒',
+        message: '虽然金币够了，但今天是工作日哦！确定要现在兑换吗？（通常周末才兑换游戏时间哦）',
+        confirmLabel: '坚持兑换',
+        cancelLabel: '等到周末',
+      });
+      if (!confirmed) {
+        return;
       }
+    } else {
+      const confirmed = await openConfirm({
+        title: '兑换确认',
+        message: '确定要消耗1000蛋币兑换30分钟自由娱乐时间吗？需家长确认哦！',
+        confirmLabel: '确认兑换',
+        cancelLabel: '再想想',
+      });
+      if (!confirmed) {
+        return;
+      }
+    }
 
-      soundEngine.playCash();
-      onRedeem(REDEMPTION_COST);
-   };
+    // 如果设置了密码，需要验证
+    if (isPasswordSet) {
+      const password = await openPasswordModal({ mode: 'verify' });
+      if (!password || !verifyPassword(password)) {
+        return;
+      }
+    }
+
+    // 创建支出记录
+    addExpense({ remark: '兑换30分钟自由时间' }, REDEMPTION_COST);
+
+    soundEngine.playCash();
+    onRedeem(REDEMPTION_COST);
+  };
+
+  const handleOpenRecords = () => {
+    openCoinRecordModal();
+  };
 
   return (
     <AnimatePresence>
@@ -64,15 +84,29 @@ const VaultModal: React.FC<VaultModalProps> = ({ isOpen, totalCoins, onClose, on
         >
           {/* --- Header --- */}
           <div className="flex justify-between items-center p-6 bg-[#FCD34D] shadow-md z-10">
-             <div className="flex items-center gap-2">
-                <div className="bg-white p-2 rounded-full shadow-sm">
-                   <Coins className="text-[#B45309]" size={24} />
-                </div>
-                <h2 className="text-2xl font-black text-[#78350F] font-display">我的小金库</h2>
-             </div>
-             <button onClick={onClose} className="p-2 bg-white/50 rounded-full hover:bg-white transition-colors">
+            <div className="flex items-center gap-2">
+              <div className="bg-white p-2 rounded-full shadow-sm">
+                <Coins className="text-[#B45309]" size={24} />
+              </div>
+              <h2 className="text-2xl font-black text-[#78350F] font-display">我的小金库</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* 收支记录按钮 */}
+              <button
+                onClick={handleOpenRecords}
+                className="p-2 bg-white/50 rounded-full hover:bg-white transition-colors relative"
+              >
+                <FileText className="text-[#78350F]" size={24} />
+                {pendingCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                    {pendingCount}
+                  </span>
+                )}
+              </button>
+              <button onClick={onClose} className="p-2 bg-white/50 rounded-full hover:bg-white transition-colors">
                 <X className="text-[#78350F]" size={24} />
-             </button>
+              </button>
+            </div>
           </div>
 
           {/* --- Content Scrollable --- */}

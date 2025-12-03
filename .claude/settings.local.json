@@ -8,7 +8,8 @@
       "Bash(npm install)",
       "Bash(ls:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(GITHUB_ACTIONS=true npm run build:*)"
+      "Bash(GITHUB_ACTIONS=true npm run build:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

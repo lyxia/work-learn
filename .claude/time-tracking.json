@@ -47,6 +47,21 @@
       "end_time": "2025-12-03T08:47:25Z",
       "duration_seconds": 3439,
       "duration_formatted": "0h 57m"
+    },
+    "78dcb0fc-673a-4f11-850b-814b45e8b767": {
+      "start_time": "2025-12-03T09:50:22Z",
+      "status": "in_progress",
+      "session_id": "78dcb0fc-673a-4f11-850b-814b45e8b767"
+    },
+    "f439b037-514c-45b0-9c1f-6004d998fc24": {
+      "start_time": "2025-12-03T14:53:53Z",
+      "status": "in_progress",
+      "session_id": "f439b037-514c-45b0-9c1f-6004d998fc24"
+    },
+    "40818e3c-ed56-4b81-89a7-f7f904c152a0": {
+      "start_time": "2025-12-03T15:15:07Z",
+      "status": "in_progress",
+      "session_id": "40818e3c-ed56-4b81-89a7-f7f904c152a0"
     }
   }
 }
