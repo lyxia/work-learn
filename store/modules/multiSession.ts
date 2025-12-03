@@ -73,10 +73,10 @@ export const useMultiSessionStore = create<MultiSessionState>((set, get) => ({
     }
   },
   completeCurrentRound: (roundCoins: number) => {
-    const { currentRound, totalRounds, accumulatedCoins } = get();
+    const { currentRound, totalRounds, accumulatedCoins, roundDuration, lastRoundDuration } = get();
     const newAccumulatedCoins = accumulatedCoins + roundCoins;
     const newCompletedRounds = get().completedRounds + 1;
-    
+
     set({
       accumulatedCoins: newAccumulatedCoins,
       completedRounds: newCompletedRounds,
@@ -85,17 +85,13 @@ export const useMultiSessionStore = create<MultiSessionState>((set, get) => ({
     // 判断是否是最后一轮
     if (currentRound === totalRounds) {
       // 最后一轮：计算总奖励并打开结算弹窗
-      const roundDuration = useSettingsStore.getState().settings.timerOverride || 1;
-      const totalDuration = totalRounds * roundDuration;
-      const sessionRewardsStore = useSessionRewardsStore.getState();
-      sessionRewardsStore.calculateRewards(totalDuration);
-      
-      const uiStore = useUIStore.getState();
-      uiStore.openSettlementModal();
+      // 总时长 = (总轮数-1) * 标准轮时长 + 最后一轮时长
+      const totalDuration = (totalRounds - 1) * roundDuration + lastRoundDuration;
+      useSessionRewardsStore.getState().calculateRewards(totalDuration);
+      useUIStore.getState().openSettlementModal();
     } else {
       // 不是最后一轮：进入休息页面
-      const uiStore = useUIStore.getState();
-      uiStore.openRestModal();
+      useUIStore.getState().openRestModal();
     }
   },
   updateAccumulatedCoins: (timePassed: number, totalTime: number) => {
@@ -112,18 +108,9 @@ export const useMultiSessionStore = create<MultiSessionState>((set, get) => ({
     });
   },
   finishEarly: () => {
-    // 提前完成：使用当前 accumulatedCoins 打开结算弹窗
-    const { accumulatedCoins, completedRounds, roundDuration } = get();
-    const effectiveRoundDuration = roundDuration || useSettingsStore.getState().settings.timerOverride || 1;
-    const totalDuration = completedRounds * effectiveRoundDuration;
-    
-    if (totalDuration > 0) {
-      const sessionRewardsStore = useSessionRewardsStore.getState();
-      sessionRewardsStore.calculateRewards(totalDuration);
-    }
-    
-    const uiStore = useUIStore.getState();
-    uiStore.openSettlementModal();
+    // 提前完成：计算奖励并打开结算弹窗
+    useSessionRewardsStore.getState().calculateRewardsFromCurrentState();
+    useUIStore.getState().openSettlementModal();
   },
   cancel: () => {
     // 中途放弃：不给金币，立即结束会话

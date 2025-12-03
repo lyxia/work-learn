@@ -219,10 +219,48 @@ describe('MultiSession Store', () => {
       const { createSession, finishEarly } = useMultiSessionStore.getState();
       createSession('数学作业', 10, 1);
       useMultiSessionStore.setState({ completedRounds: 3 });
+      // 设置 timer 状态：当前轮次刚开始，已过去0秒
+      useTimerStore.setState({ totalTime: 60, timeLeft: 60 });
       finishEarly();
       const rewardsState = useSessionRewardsStore.getState();
       // 已完成3轮，每轮1分钟，总时长3分钟，基础奖励15金币
       expect(rewardsState.baseCoins).toBe(15);
+    });
+
+    it('第一轮提前完成时应该计算当前轮次已过去时间的金币', () => {
+      const { createSession, finishEarly } = useMultiSessionStore.getState();
+      createSession('数学作业', 10, 1); // 10轮，每轮1分钟
+      // 模拟第一轮进行了30秒（completedRounds = 0）
+      useTimerStore.setState({ totalTime: 60, timeLeft: 30 }); // 已过去30秒
+      finishEarly();
+      const rewardsState = useSessionRewardsStore.getState();
+      // 已过去30秒 = 0.5分钟，基础奖励 = ceil(0.5 * 5) = 3金币
+      expect(rewardsState.baseCoins).toBe(3);
+    });
+
+    it('第二轮提前完成时应该计算已完成轮次+当前轮次的金币', () => {
+      const { createSession, finishEarly } = useMultiSessionStore.getState();
+      createSession('数学作业', 10, 1); // 10轮，每轮1分钟
+      // 模拟已完成1轮，当前第2轮进行了30秒
+      useMultiSessionStore.setState({ completedRounds: 1, currentRound: 2 });
+      useTimerStore.setState({ totalTime: 60, timeLeft: 30 }); // 当前轮已过去30秒
+      finishEarly();
+      const rewardsState = useSessionRewardsStore.getState();
+      // 已完成1轮 = 1分钟 + 当前轮0.5分钟 = 1.5分钟
+      // 基础奖励 = ceil(1.5 * 5) = 8金币
+      expect(rewardsState.baseCoins).toBe(8);
+    });
+
+    it('刚开始就提前完成时金币应该为0或最小值', () => {
+      const { createSession, finishEarly } = useMultiSessionStore.getState();
+      createSession('数学作业', 10, 1);
+      // 模拟刚开始（timeLeft = totalTime，已过去0秒）
+      useTimerStore.setState({ totalTime: 60, timeLeft: 60 });
+      finishEarly();
+      const rewardsState = useSessionRewardsStore.getState();
+      // 已过去0秒，totalDuration = 0，不会调用 calculateRewards
+      // baseCoins 保持默认值 0
+      expect(rewardsState.baseCoins).toBe(0);
     });
   });
 

@@ -231,7 +231,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                    {/* Duration Stat */}
                    <div className="flex items-center gap-2 text-white/80 font-medium bg-black/20 px-4 py-1 rounded-full">
                       <Clock size={16} />
-                      <span>专注时长: {duration} 分钟</span>
+                      <span>专注时长: {Number.isInteger(duration) ? duration : duration.toFixed(1)} 分钟</span>
                    </div>
 
                    {/* Action Button */}
