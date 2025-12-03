@@ -71,6 +71,64 @@
       .rotate-x-12 {
         transform: rotateX(25deg);
       }
+
+      /* 移动端横屏提示 */
+      .landscape-warning {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #FEF9C3 0%, #FDE047 100%);
+        z-index: 99999;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .landscape-warning-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        animation: rotate-phone 1.5s ease-in-out infinite;
+      }
+
+      .landscape-warning-text {
+        font-family: 'ZCOOL KuaiLe', 'Noto Sans SC', sans-serif;
+        font-size: 24px;
+        color: #4B5563;
+        margin-bottom: 10px;
+      }
+
+      .landscape-warning-subtext {
+        font-family: 'Noto Sans SC', sans-serif;
+        font-size: 16px;
+        color: #6B7280;
+      }
+
+      @keyframes rotate-phone {
+        0%, 100% {
+          transform: rotate(0deg);
+        }
+        25% {
+          transform: rotate(-20deg);
+        }
+        75% {
+          transform: rotate(20deg);
+        }
+      }
+
+      /* 仅在移动端横屏时显示 */
+      @media screen and (max-width: 896px) and (orientation: landscape) {
+        .landscape-warning {
+          display: flex;
+        }
+        #root {
+          display: none;
+        }
+      }
     </style>
   <script type="importmap">
 {
@@ -88,6 +146,12 @@
 <link rel="stylesheet" href="/index.css">
 </head>
   <body>
+    <!-- 横屏提示 -->
+    <div class="landscape-warning">
+      <div class="landscape-warning-icon">📱</div>
+      <div class="landscape-warning-text">请旋转您的设备</div>
+      <div class="landscape-warning-subtext">为了更好的体验，请使用竖屏模式</div>
+    </div>
     <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
