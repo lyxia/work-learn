@@ -307,6 +307,15 @@ const App: React.FC = () => {
   return (
     // 修改: 确保容器占满全屏，使用 flex-col 布局，移除 items-center justify-center 以支持自然流
     <div className="min-h-screen flex flex-col font-sans text-gray-700 selection:bg-yellow-200 overflow-x-hidden">
+      {/* --- 全局静音按钮 (始终显示在最上层) --- */}
+      <button
+        onClick={handleMuteToggle}
+        className="fixed top-4 right-4 z-[100] w-10 h-10 bg-white rounded-full border-2 border-gray-300 flex items-center justify-center shadow-md active:scale-95 transition-transform"
+        aria-label={isMuted ? '取消静音' : '静音'}
+      >
+        {isMuted ? <VolumeX size={18} className="text-gray-400" /> : <Volume2 size={18} className="text-[#38BDF8]" />}
+      </button>
+
       {/* --- Header Bar --- */}
       <header className="fixed top-0 left-0 right-0 p-4 z-40 flex justify-between items-start pointer-events-none">
         {/* Left: Logo & Settings */}
@@ -328,17 +337,8 @@ const App: React.FC = () => {
           </button>
         </div>
 
-        {/* Right: Tools */}
-        <div className="flex gap-2">
-          {/* Mute Button */}
-          <button
-            onClick={handleMuteToggle}
-            className="pointer-events-auto w-10 h-10 bg-white rounded-full border-2 border-gray-300 flex items-center justify-center shadow-sm active:scale-95 transition-transform"
-          >
-            {isMuted ? <VolumeX size={18} className="text-gray-400" /> : <Volume2 size={18} className="text-[#38BDF8]" />}
-          </button>
-
-          {/* Coin Display */}
+        {/* Right: Coin Display (留出静音按钮的空间) */}
+        <div className="flex gap-2 mr-12">
           <button
             onClick={handleVaultOpen}
             className="pointer-events-auto bg-gray-800 text-[#FCD34D] px-4 py-2 rounded-full border-b-4 border-black shadow-lg flex items-center gap-2 font-display font-bold text-lg hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all"
