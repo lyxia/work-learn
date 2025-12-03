@@ -234,7 +234,8 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center font-sans text-gray-700 selection:bg-yellow-200">
+    // 修改: 确保容器占满全屏，使用 flex-col 布局，移除 items-center justify-center 以支持自然流
+    <div className="min-h-screen flex flex-col font-sans text-gray-700 selection:bg-yellow-200 overflow-x-hidden">
       {/* --- Header Bar --- */}
       <header className="fixed top-0 left-0 right-0 p-4 z-40 flex justify-between items-start pointer-events-none">
         {/* Left: Logo & Settings */}
@@ -278,7 +279,13 @@ const App: React.FC = () => {
       </header>
 
       {/* --- Main Content Container --- */}
-      <main className="w-full max-w-2xl px-4 relative z-0 mt-16 pb-80">
+      {/* 修改: 
+          - 增加 mt-20 (移动端避开 Header) / md:mt-16
+          - 调整底部留白: pb-10 (移动端) / md:pb-80 (桌面端)
+          - 增加 flex-grow 让它撑开高度
+          - mx-auto 居中
+      */}
+      <main className="w-full max-w-2xl px-4 relative z-0 mt-20 md:mt-16 pb-10 md:pb-80 mx-auto flex-grow flex flex-col justify-center">
         {/* Input Section */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}

@@ -108,7 +108,9 @@ export const useMultiSessionStore = create<MultiSessionState>((set, get) => ({
     });
   },
   finishEarly: () => {
-    // 提前完成：计算奖励并打开结算弹窗
+    // 提前完成：停止计时器，计算奖励并打开结算弹窗
+    const timerStore = useTimerStore.getState();
+    timerStore.stopTimer();
     useSessionRewardsStore.getState().calculateRewardsFromCurrentState();
     useUIStore.getState().openSettlementModal();
   },
