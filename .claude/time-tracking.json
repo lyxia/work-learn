@@ -62,6 +62,19 @@
       "start_time": "2025-12-03T15:15:07Z",
       "status": "in_progress",
       "session_id": "40818e3c-ed56-4b81-89a7-f7f904c152a0"
+    },
+    "8e69af5e-8da4-4a2e-87d0-bbb9b56f6230": {
+      "start_time": "2025-12-03T15:36:32Z",
+      "status": "in_progress",
+      "session_id": "8e69af5e-8da4-4a2e-87d0-bbb9b56f6230"
+    },
+    "645ea8d4-d934-4484-afe4-60907bb65a4b": {
+      "start_time": "2025-12-03T15:48:13Z",
+      "status": "completed",
+      "session_id": "645ea8d4-d934-4484-afe4-60907bb65a4b",
+      "end_time": "2025-12-03T15:53:21Z",
+      "duration_seconds": 308,
+      "duration_formatted": "0h 5m"
     }
   }
 }
