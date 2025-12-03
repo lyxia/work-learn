@@ -98,6 +98,10 @@ const App: React.FC = () => {
     }
   }, [timerOptions, selectedTimeId, setSelectedTimeId]);
 
+  useEffect(() => {
+    soundEngine.setMuted(isMuted);
+  }, [isMuted]);
+
   // Timer Tick Logic - use useCallback to stabilize the tick function
   const handleTimerTick = useCallback(() => {
     tickTimer();
@@ -230,8 +234,10 @@ const App: React.FC = () => {
   };
 
   const handleMuteToggle = () => {
+    const nextMuted = !isMuted;
+    soundEngine.setMuted(nextMuted);
     toggleMute();
-    if (!isMuted) {
+    if (!nextMuted) {
       soundEngine.playClick();
     }
   };

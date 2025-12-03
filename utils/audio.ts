@@ -121,9 +121,34 @@ class SoundEngine {
     this.playTone(1000, 'sine', 0.05, 0.08);
   }
 
-  toggleMute() {
-    this.isMuted = !this.isMuted;
+  setMuted(muted: boolean) {
+    if (this.isMuted === muted) {
+      return this.isMuted;
+    }
+
+    this.isMuted = muted;
+
+    if (muted) {
+      if (this.ctx && this.ctx.state === 'running') {
+        this.ctx
+          .suspend()
+          .catch(() => {
+            // Ignore suspend failures; browsers may reject without user gesture.
+          });
+      }
+      return this.isMuted;
+    }
+
+    this.initCtx();
     return this.isMuted;
+  }
+
+  getMuted() {
+    return this.isMuted;
+  }
+
+  toggleMute() {
+    return this.setMuted(!this.isMuted);
   }
 }
 
