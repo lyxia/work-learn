@@ -82,6 +82,24 @@ describe('MultiSession Store', () => {
       expect(useMultiSessionStore.getState().totalRounds).toBe(10);
     });
 
+    it('不整除时应该向上取整计算轮数', () => {
+      const { createSession } = useMultiSessionStore.getState();
+      createSession('数学作业', 3, 2); // 总时长3分钟，每轮2分钟
+      const state = useMultiSessionStore.getState();
+      expect(state.totalRounds).toBe(2); // Math.ceil(3/2) = 2
+      expect(state.roundDuration).toBe(2);
+      expect(state.lastRoundDuration).toBe(1); // 3 % 2 = 1
+    });
+
+    it('整除时最后一轮时长应该等于标准时长', () => {
+      const { createSession } = useMultiSessionStore.getState();
+      createSession('英语阅读', 6, 2); // 总时长6分钟，每轮2分钟
+      const state = useMultiSessionStore.getState();
+      expect(state.totalRounds).toBe(3);
+      expect(state.roundDuration).toBe(2);
+      expect(state.lastRoundDuration).toBe(2); // 6 % 2 = 0，使用 roundDuration
+    });
+
     it('应该启动第1轮计时器', () => {
       const { createSession } = useMultiSessionStore.getState();
       createSession('数学作业', 10, 1);
@@ -116,6 +134,17 @@ describe('MultiSession Store', () => {
       useMultiSessionStore.setState({ currentRound: 2 });
       startNextRound();
       expect(useMultiSessionStore.getState().currentRound).toBe(2);
+    });
+
+    it('不整除时最后一轮应该使用正确的时长', () => {
+      const { createSession, startNextRound } = useMultiSessionStore.getState();
+      createSession('数学作业', 3, 2); // 总时长3分钟，每轮2分钟，共2轮
+      // 第一轮应该是2分钟 = 120秒，启动时减1
+      expect(useTimerStore.getState().timeLeft).toBe(119);
+      // 开始第二轮（最后一轮）
+      startNextRound();
+      // 最后一轮应该是1分钟 = 60秒，启动时减1
+      expect(useTimerStore.getState().timeLeft).toBe(59);
     });
   });
 

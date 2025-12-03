@@ -7,6 +7,16 @@
       "end_time": "2025-12-02T08:07:34Z",
       "duration_seconds": 8171,
       "duration_formatted": "2h 16m"
+    },
+    "ec08077d-4240-401c-9cfc-774e4b69eb40": {
+      "start_time": "2025-12-03T03:01:47Z",
+      "status": "in_progress",
+      "session_id": "ec08077d-4240-401c-9cfc-774e4b69eb40"
+    },
+    "232dbf93-9881-4920-abdd-d2828c1da61c": {
+      "start_time": "2025-12-03T03:43:47Z",
+      "status": "in_progress",
+      "session_id": "232dbf93-9881-4920-abdd-d2828c1da61c"
     }
   }
 }

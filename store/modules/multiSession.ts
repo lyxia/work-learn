@@ -11,6 +11,8 @@ interface MultiSessionState {
   completedRounds: number;
   accumulatedCoins: number;
   isActive: boolean;
+  roundDuration: number; // 标准每轮时长（分钟）
+  lastRoundDuration: number; // 最后一轮时长（分钟），可能与标准时长不同
   createSession: (taskName: string, totalDuration: number, roundDuration: number) => void;
   startNextRound: () => void;
   completeCurrentRound: (roundCoins: number) => void;
@@ -27,8 +29,22 @@ export const useMultiSessionStore = create<MultiSessionState>((set, get) => ({
   completedRounds: 0,
   accumulatedCoins: 0,
   isActive: false,
+  roundDuration: 0,
+  lastRoundDuration: 0,
   createSession: (taskName: string, totalDuration: number, roundDuration: number) => {
-    const totalRounds = Math.floor(totalDuration / roundDuration);
+    // 使用秒作为基准单位进行计算，避免浮点数精度问题
+    const totalDurationSeconds = Math.round(totalDuration * 60);
+    const roundDurationSeconds = Math.round(roundDuration * 60);
+
+    // 使用 Math.ceil 向上取整，确保不整除时也能完成所有时间
+    const totalRounds = Math.ceil(totalDurationSeconds / roundDurationSeconds);
+    // 计算最后一轮的时长（秒）
+    const remainderSeconds = totalDurationSeconds % roundDurationSeconds;
+    const lastRoundDurationSeconds = remainderSeconds > 0 ? remainderSeconds : roundDurationSeconds;
+
+    // 转回分钟存储（保持接口兼容）
+    const lastRoundDuration = lastRoundDurationSeconds / 60;
+
     set({
       taskName,
       totalRounds,
@@ -36,20 +52,24 @@ export const useMultiSessionStore = create<MultiSessionState>((set, get) => ({
       completedRounds: 0,
       accumulatedCoins: 0,
       isActive: true,
+      roundDuration,
+      lastRoundDuration,
     });
-    // 开始第1轮
+    // 开始第1轮（第一轮始终使用标准时长，除非只有一轮）
     const timerStore = useTimerStore.getState();
-    timerStore.startTimer(roundDuration * 60); // 转换为秒
+    const firstRoundDurationSeconds = totalRounds === 1 ? lastRoundDurationSeconds : roundDurationSeconds;
+    timerStore.startTimer(firstRoundDurationSeconds); // 直接使用秒
   },
   startNextRound: () => {
-    const { currentRound, totalRounds } = get();
+    const { currentRound, totalRounds, roundDuration, lastRoundDuration } = get();
     if (currentRound < totalRounds) {
-      const roundDuration = useSettingsStore.getState().settings.timerOverride;
-      if (roundDuration > 0) {
-        set({ currentRound: currentRound + 1 });
-        const timerStore = useTimerStore.getState();
-        timerStore.startTimer(roundDuration * 60);
-      }
+      const nextRound = currentRound + 1;
+      // 判断下一轮是否是最后一轮，如果是则使用 lastRoundDuration
+      const nextRoundDuration = nextRound === totalRounds ? lastRoundDuration : roundDuration;
+      set({ currentRound: nextRound });
+      const timerStore = useTimerStore.getState();
+      // 使用 Math.round 确保整数秒，避免浮点数精度问题
+      timerStore.startTimer(Math.round(nextRoundDuration * 60));
     }
   },
   completeCurrentRound: (roundCoins: number) => {
@@ -83,19 +103,19 @@ export const useMultiSessionStore = create<MultiSessionState>((set, get) => ({
     // totalTime: 当前轮次总时间（秒）
     // 实时显示累计金币：Math.floor((timePassed / 60) * 5)
     const currentRoundCoins = Math.floor((timePassed / 60) * 5);
-    const { completedRounds } = get();
+    const { completedRounds, roundDuration } = get();
     // 累计金币 = 已完成轮次的金币 + 当前轮次实时金币
-    const roundDuration = useSettingsStore.getState().settings.timerOverride || 1;
-    const completedRoundsCoins = completedRounds * Math.ceil(roundDuration * 5);
+    const effectiveRoundDuration = roundDuration || useSettingsStore.getState().settings.timerOverride || 1;
+    const completedRoundsCoins = completedRounds * Math.ceil(effectiveRoundDuration * 5);
     set({
       accumulatedCoins: completedRoundsCoins + currentRoundCoins,
     });
   },
   finishEarly: () => {
     // 提前完成：使用当前 accumulatedCoins 打开结算弹窗
-    const { accumulatedCoins, completedRounds } = get();
-    const roundDuration = useSettingsStore.getState().settings.timerOverride || 1;
-    const totalDuration = completedRounds * roundDuration;
+    const { accumulatedCoins, completedRounds, roundDuration } = get();
+    const effectiveRoundDuration = roundDuration || useSettingsStore.getState().settings.timerOverride || 1;
+    const totalDuration = completedRounds * effectiveRoundDuration;
     
     if (totalDuration > 0) {
       const sessionRewardsStore = useSessionRewardsStore.getState();
@@ -119,6 +139,8 @@ export const useMultiSessionStore = create<MultiSessionState>((set, get) => ({
       completedRounds: 0,
       accumulatedCoins: 0,
       isActive: false,
+      roundDuration: 0,
+      lastRoundDuration: 0,
     });
     // 重置相关模块
     const timerStore = useTimerStore.getState();
