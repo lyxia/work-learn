@@ -10,8 +10,11 @@
     },
     "ec08077d-4240-401c-9cfc-774e4b69eb40": {
       "start_time": "2025-12-03T03:01:47Z",
-      "status": "in_progress",
-      "session_id": "ec08077d-4240-401c-9cfc-774e4b69eb40"
+      "status": "completed",
+      "session_id": "ec08077d-4240-401c-9cfc-774e4b69eb40",
+      "end_time": "2025-12-03T07:49:35Z",
+      "duration_seconds": 17268,
+      "duration_formatted": "4h 47m"
     },
     "232dbf93-9881-4920-abdd-d2828c1da61c": {
       "start_time": "2025-12-03T03:43:47Z",
@@ -36,6 +39,14 @@
       "end_time": "2025-12-03T05:31:09Z",
       "duration_seconds": 7,
       "duration_formatted": "0h 0m"
+    },
+    "c8690655-0074-4e5b-a3dc-592562a61b5f": {
+      "start_time": "2025-12-03T07:50:06Z",
+      "status": "completed",
+      "session_id": "c8690655-0074-4e5b-a3dc-592562a61b5f",
+      "end_time": "2025-12-03T08:47:25Z",
+      "duration_seconds": 3439,
+      "duration_formatted": "0h 57m"
     }
   }
 }

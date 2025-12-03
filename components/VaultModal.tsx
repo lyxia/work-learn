@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Coins, X, Lock, Unlock, Calendar } from 'lucide-react';
 import { soundEngine } from '../utils/audio';
 import moneyImage from '../assets/money.png';
+import { useUIStore } from '../store';
 
 interface VaultModalProps {
   isOpen: boolean;
@@ -20,22 +21,36 @@ const VaultModal: React.FC<VaultModalProps> = ({ isOpen, totalCoins, onClose, on
   const coinsNeeded = Math.max(0, REDEMPTION_COST - totalCoins);
   const canRedeem = totalCoins >= REDEMPTION_COST;
 
-  const handleRedeemClick = () => {
-    if (!canRedeem) return;
-    
-    if (!isWeekend) {
-      if (!window.confirm("虽然金币够了，但今天是工作日哦！确定要现在兑换吗？（通常周末才兑换游戏时间哦）")) {
-        return;
-      }
-    } else {
-        if (!window.confirm("确定要消耗1000蛋币兑换30分钟自由娱乐时间吗？需家长确认哦！")) {
+   const openConfirm = useUIStore((state) => state.openConfirm);
+
+   const handleRedeemClick = async () => {
+      if (!canRedeem) return;
+
+      if (!isWeekend) {
+         const confirmed = await openConfirm({
+            title: '工作日提醒',
+            message: '虽然金币够了，但今天是工作日哦！确定要现在兑换吗？（通常周末才兑换游戏时间哦）',
+            confirmLabel: '坚持兑换',
+            cancelLabel: '等到周末',
+         });
+         if (!confirmed) {
             return;
-        }
-    }
-    
-    soundEngine.playCash();
-    onRedeem(REDEMPTION_COST);
-  };
+         }
+      } else {
+         const confirmed = await openConfirm({
+            title: '兑换确认',
+            message: '确定要消耗1000蛋币兑换30分钟自由娱乐时间吗？需家长确认哦！',
+            confirmLabel: '确认兑换',
+            cancelLabel: '再想想',
+         });
+         if (!confirmed) {
+            return;
+         }
+      }
+
+      soundEngine.playCash();
+      onRedeem(REDEMPTION_COST);
+   };
 
   return (
     <AnimatePresence>
@@ -141,7 +156,9 @@ const VaultModal: React.FC<VaultModalProps> = ({ isOpen, totalCoins, onClose, on
 
                    {/* Main Action Button */}
                    <button
-                      onClick={handleRedeemClick}
+                                 onClick={() => {
+                                    void handleRedeemClick();
+                                 }}
                       disabled={!canRedeem}
                       className={`
                         w-full py-4 rounded-2xl font-black text-xl shadow-lg transition-all border-b-4 flex flex-col items-center justify-center gap-1

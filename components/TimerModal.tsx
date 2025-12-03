@@ -12,8 +12,8 @@ interface TimerModalProps {
   currentRound: number;
   totalRounds: number;
   accumulatedCoins: number;
-  onCancel: () => void;
-  onFinishEarly?: () => void;
+  onCancel: () => void | Promise<void>;
+  onFinishEarly?: () => void | Promise<void>;
 }
 
 const TimerModal: React.FC<TimerModalProps> = ({
@@ -34,6 +34,15 @@ const TimerModal: React.FC<TimerModalProps> = ({
 
   // Internal state for the factory animation loop
   const [productionTick, setProductionTick] = useState(0);
+
+  // Check for mobile device to adjust animation height
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   // Use ref to track latest timeLeft for tick sound
   const timeLeftRef = useRef(timeLeft);
@@ -143,20 +152,15 @@ const TimerModal: React.FC<TimerModalProps> = ({
                 {/* --- 3D Production Line --- */}
                 <div className="relative w-full h-48 perspective-container z-10 flex items-end justify-center pb-4">
                   {/* The Stamper Machine */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-full flex flex-col items-center">
+                  <div className="absolute top-12 md:top-0 left-1/2 -translate-x-1/2 w-16 h-full flex flex-col items-center">
                     <motion.div
                       className="w-4 h-24 bg-gray-400 rounded-b-lg origin-top"
-                      animate={{ height: [60, 100, 60] }}
+                      animate={{ height: isMobile ? [30, 60, 30] : [60, 100, 60] }}
                       transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                     >
                       {/* Piston Head */}
                       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-8 bg-gray-600 rounded-lg shadow-lg border-b-4 border-gray-700" />
                     </motion.div>
-                  </div>
-
-                  {/* The Egg Worker */}
-                  <div className="absolute left-4 bottom-8 w-20 h-20 z-20">
-                    <EggCharacter state="worker" />
                   </div>
 
                   {/* The Conveyor Belt */}
@@ -182,6 +186,11 @@ const TimerModal: React.FC<TimerModalProps> = ({
                         </div>
                       </motion.div>
                     </AnimatePresence>
+                  </div>
+
+                  {/* The Egg Worker */}
+                  <div className="absolute left-4 bottom-8 w-20 h-20 z-20">
+                    <EggCharacter state="worker" />
                   </div>
 
                   {/* Flying Coins to Counter Animation */}
@@ -212,14 +221,18 @@ const TimerModal: React.FC<TimerModalProps> = ({
           <div className="mb-8 w-full flex justify-center gap-4">
             {onFinishEarly && (
               <button
-                onClick={onFinishEarly}
+                onClick={() => {
+                  void onFinishEarly();
+                }}
                 className="text-gray-500 hover:text-gray-700 text-sm font-medium px-6 py-3 rounded-full hover:bg-gray-200/50 transition-colors"
               >
                 提前完成
               </button>
             )}
             <button
-              onClick={onCancel}
+              onClick={() => {
+                void onCancel();
+              }}
               className="text-gray-400 hover:text-gray-600 text-sm font-medium px-6 py-3 rounded-full hover:bg-gray-200/50 transition-colors"
             >
               放弃挑战

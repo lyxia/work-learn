@@ -8,6 +8,7 @@ import RestModal from './components/RestModal';
 import SettlementModal from './components/SettlementModal';
 import VaultModal from './components/VaultModal';
 import SettingsModal from './components/SettingsModal';
+import ConfirmModal from './components/ConfirmModal';
 import Footer from './components/Footer';
 import { soundEngine } from './utils/audio';
 import {
@@ -54,12 +55,16 @@ const App: React.FC = () => {
   const settlementModalOpen = useUIStore((state) => state.settlementModal.isOpen);
   const restModalOpen = useUIStore((state) => state.restModal.isOpen);
   const vaultModalOpen = useUIStore((state) => state.vaultModal.isOpen);
+  const confirmModalState = useUIStore((state) => state.confirmModal);
   const openSettlementModal = useUIStore((state) => state.openSettlementModal);
   const closeSettlementModal = useUIStore((state) => state.closeSettlementModal);
   const openRestModal = useUIStore((state) => state.openRestModal);
   const closeRestModal = useUIStore((state) => state.closeRestModal);
   const openVaultModal = useUIStore((state) => state.openVaultModal);
   const closeVaultModal = useUIStore((state) => state.closeVaultModal);
+  const openConfirm = useUIStore((state) => state.openConfirm);
+  const confirmConfirmModal = useUIStore((state) => state.confirmConfirmModal);
+  const cancelConfirmModal = useUIStore((state) => state.cancelConfirmModal);
 
   const baseCoins = useSessionRewardsStore((state) => state.baseCoins);
   const bonusCoins = useSessionRewardsStore((state) => state.bonusCoins);
@@ -143,16 +148,28 @@ const App: React.FC = () => {
     setSelectedTimeId(id);
   };
 
-  const handleStart = () => {
+  const handleStart = async () => {
     // 验证任务名称必填
     if (!taskName || taskName.trim() === '') {
-      alert('请先输入任务名称！');
+      await openConfirm({
+        title: '需要任务名称',
+        message: '请先输入任务名称！',
+        confirmLabel: '好的',
+        showCancel: false,
+        pauseFocusTimer: false,
+      });
       return;
     }
 
     const selectedOption = getSelectedTimerOption();
     if (!selectedOption) {
-      alert('请选择预计时长！');
+      await openConfirm({
+        title: '请选择时长',
+        message: '请选择预计时长！',
+        confirmLabel: '马上去选',
+        showCancel: false,
+        pauseFocusTimer: false,
+      });
       return;
     }
 
@@ -199,8 +216,15 @@ const App: React.FC = () => {
     soundEngine.playSuccess();
   };
 
-  const handleSettingsReset = () => {
-    if (window.confirm('确定恢复默认设置吗？')) {
+  const handleSettingsReset = async () => {
+    const confirmed = await openConfirm({
+      title: '恢复默认设置',
+      message: '确定恢复默认设置吗？',
+      confirmLabel: '恢复',
+      cancelLabel: '取消',
+    });
+
+    if (confirmed) {
       resetSettings();
     }
   };
@@ -212,11 +236,20 @@ const App: React.FC = () => {
     }
   };
 
-  const handleTimerCancel = () => {
-    if (window.confirm('确定要放弃吗？蛋仔工厂将停止生产金币哦！🥺')) {
-      cancelSession();
-      soundEngine.playClick();
+  const handleTimerCancel = async () => {
+    const confirmed = await openConfirm({
+      title: '放弃挑战',
+      message: '确定要放弃吗？蛋仔工厂将停止生产金币哦！🥺',
+      confirmLabel: '放弃挑战',
+      cancelLabel: '继续坚持',
+    });
+
+    if (!confirmed) {
+      return;
     }
+
+    cancelSession();
+    soundEngine.playClick();
   };
 
   const handleRestComplete = () => {
@@ -226,11 +259,20 @@ const App: React.FC = () => {
     startNextRound();
   };
 
-  const handleFinishEarly = () => {
-    if (window.confirm('确定要提前完成吗？')) {
-      finishEarly();
-      soundEngine.playSuccess();
+  const handleFinishEarly = async () => {
+    const confirmed = await openConfirm({
+      title: '提前完成',
+      message: '确定要提前完成吗？',
+      confirmLabel: '提前完成',
+      cancelLabel: '继续生产',
+    });
+
+    if (!confirmed) {
+      return;
     }
+
+    finishEarly();
+    soundEngine.playSuccess();
   };
 
   return (
@@ -361,7 +403,11 @@ const App: React.FC = () => {
       </main>
 
       {/* Footer with Character and Start Button */}
-      <Footer onStart={handleStart} />
+      <Footer
+        onStart={() => {
+          void handleStart();
+        }}
+      />
 
       {/* Focus Timer Modal */}
       <TimerModal
@@ -406,6 +452,17 @@ const App: React.FC = () => {
         onSave={handleSettingsSave}
         onReset={handleSettingsReset}
         onClose={closeSettings}
+      />
+
+      <ConfirmModal
+        isOpen={confirmModalState.isOpen}
+        title={confirmModalState.title}
+        message={confirmModalState.message}
+        confirmLabel={confirmModalState.confirmLabel}
+        cancelLabel={confirmModalState.cancelLabel}
+        showCancel={confirmModalState.showCancelButton}
+        onConfirm={confirmConfirmModal}
+        onCancel={cancelConfirmModal}
       />
     </div>
   );

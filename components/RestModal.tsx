@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Coffee, Pizza, IceCream, Candy, Coins } from 'lucide-react';
 import eatImage from '../assets/eat.png';
 import { soundEngine } from '../utils/audio';
+import { useUIStore } from '../store';
 
 interface RestModalProps {
   isOpen: boolean;
@@ -26,6 +27,39 @@ const RestModal: React.FC<RestModalProps> = ({
   const [timeLeft, setTimeLeft] = useState(duration);
   const intervalRef = useRef<number | null>(null);
   const hasPlayedSoundRef = useRef(false);
+  const openConfirm = useUIStore((state) => state.openConfirm);
+  const isConfirmOpen = useUIStore((state) => state.confirmModal.isOpen);
+  const confirmOpenRef = useRef(isConfirmOpen);
+
+  useEffect(() => {
+    confirmOpenRef.current = isConfirmOpen;
+  }, [isConfirmOpen]);
+
+  const startInterval = useCallback(() => {
+    const intervalId = window.setInterval(() => {
+      setTimeLeft((prev) => {
+        if (intervalRef.current !== intervalId) {
+          return prev;
+        }
+
+        if (prev <= 1) {
+          if (intervalRef.current === intervalId) {
+            clearInterval(intervalId);
+            intervalRef.current = null;
+          }
+          if (!hasPlayedSoundRef.current) {
+            hasPlayedSoundRef.current = true;
+            soundEngine.playRestComplete();
+          }
+          return 0;
+        }
+
+        return prev - 1;
+      });
+    }, 1000);
+
+    intervalRef.current = intervalId;
+  }, []);
 
   useEffect(() => {
     // Clean up any existing interval first
@@ -37,32 +71,9 @@ const RestModal: React.FC<RestModalProps> = ({
     if (isOpen) {
       setTimeLeft(duration); // Reset timer with custom duration
       hasPlayedSoundRef.current = false; // Reset sound flag when modal opens
-      
-      const intervalId = window.setInterval(() => {
-        setTimeLeft((prev) => {
-          // Only process if we still have the same interval
-          if (intervalRef.current !== intervalId) {
-            return prev; // Return unchanged if interval was replaced
-          }
-          
-          if (prev <= 1) {
-            // Clean up interval first
-            if (intervalRef.current === intervalId) {
-              clearInterval(intervalId);
-              intervalRef.current = null;
-            }
-            // Play rest completion sound only once
-            if (!hasPlayedSoundRef.current) {
-              hasPlayedSoundRef.current = true;
-              console.log('play rest complete');
-              soundEngine.playRestComplete();
-            }
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      intervalRef.current = intervalId;
+      if (!confirmOpenRef.current) {
+        startInterval();
+      }
     } else {
       // Reset sound flag when modal closes
       hasPlayedSoundRef.current = false;
@@ -76,16 +87,41 @@ const RestModal: React.FC<RestModalProps> = ({
       }
       hasPlayedSoundRef.current = false;
     };
-  }, [isOpen, duration]);
+  }, [isOpen, duration, startInterval]);
 
-  const handleSkip = () => {
-    if (timeLeft > 0) {
-      if (window.confirm('真的不休息了吗？蛋仔建议休息一下再出发哦！🍩')) {
-        onComplete();
-      }
-    } else {
-      onComplete();
+  useEffect(() => {
+    if (!isOpen) {
+      return;
     }
+
+    if (isConfirmOpen) {
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      return;
+    }
+
+    if (intervalRef.current === null && timeLeft > 0) {
+      startInterval();
+    }
+  }, [isOpen, isConfirmOpen, timeLeft, startInterval]);
+
+  const handleSkip = async () => {
+    if (timeLeft > 0) {
+      const confirmed = await openConfirm({
+        title: '继续挑战？',
+        message: '真的不休息了吗？蛋仔建议休息一下再出发哦！🍩',
+        confirmLabel: '继续工作',
+        cancelLabel: '再休息会儿',
+      });
+
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    onComplete();
   };
 
   const minutes = Math.floor(timeLeft / 60);
@@ -212,7 +248,9 @@ const RestModal: React.FC<RestModalProps> = ({
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={handleSkip}
+              onClick={() => {
+                void handleSkip();
+              }}
               className={`
                 w-full py-4 rounded-2xl font-bold text-lg shadow-lg transition-all
                 ${isFinished

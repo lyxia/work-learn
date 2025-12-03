@@ -8,7 +8,7 @@ interface SettingsModalProps {
   settings: AppSettings;
   onSave: (newSettings: AppSettings) => void;
   onClose: () => void;
-  onReset: () => void;
+  onReset: () => void | Promise<void>;
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ 
@@ -58,7 +58,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             initial={{ scale: 0.9, y: 20, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0.9, y: 20, opacity: 0 }}
-            className="relative bg-[#FFFBEB] w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden border-4 border-[#FCD34D]"
+            className="relative bg-[#FFFBEB] w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden border-4 border-[#FCD34D] flex flex-col max-h-[calc(100vh-2rem)]"
           >
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-20 pointer-events-none" 
@@ -84,7 +84,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
 
             {/* Content */}
-            <div className="relative z-10 p-6 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+            <div className="relative z-10 p-4 md:p-6 space-y-6 flex-1 overflow-y-auto custom-scrollbar min-h-0">
               
               {/* Field 1: Timer Override */}
               <div className="bg-white p-4 rounded-3xl border-4 border-[#E5E7EB] focus-within:border-[#38BDF8] transition-colors shadow-sm">
@@ -97,7 +97,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     step="0.1"
                     value={timerOverride}
                     onChange={(e) => setTimerOverride(e.target.value)}
-                    className="flex-1 bg-gray-50 p-3 rounded-xl border-2 border-gray-200 outline-none text-xl font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-[#38BDF8]/20"
+                    className="flex-1 min-w-0 bg-gray-50 p-3 rounded-xl border-2 border-gray-200 outline-none text-xl font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-[#38BDF8]/20"
                   />
                   <span className="text-gray-400 font-bold whitespace-nowrap">分钟</span>
                 </div>
@@ -116,7 +116,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     type="number"
                     value={restDuration}
                     onChange={(e) => setRestDuration(e.target.value)}
-                    className="flex-1 bg-gray-50 p-3 rounded-xl border-2 border-gray-200 outline-none text-xl font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-[#F472B6]/20"
+                    className="flex-1 min-w-0 bg-gray-50 p-3 rounded-xl border-2 border-gray-200 outline-none text-xl font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-[#F472B6]/20"
                   />
                   <span className="text-gray-400 font-bold whitespace-nowrap">秒</span>
                 </div>
@@ -131,7 +131,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   type="text"
                   value={taskOptionsStr}
                   onChange={(e) => setTaskOptionsStr(e.target.value)}
-                  className="w-full bg-gray-50 p-3 rounded-xl border-2 border-gray-200 outline-none text-xl font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-[#FCD34D]/20 mb-1"
+                  className="w-full min-w-0 bg-gray-50 p-3 rounded-xl border-2 border-gray-200 outline-none text-xl font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-[#FCD34D]/20 mb-1"
                 />
                 <p className="text-xs text-gray-400 font-bold">
                   用逗号分隔，例如: 10, 20, 30
@@ -143,7 +143,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             {/* Footer */}
             <div className="relative z-10 px-6 py-5 bg-white/50 border-t-2 border-[#FDE68A] flex gap-4">
               <button
-                onClick={onReset}
+                onClick={() => {
+                  void onReset();
+                }}
                 className="flex-1 py-3 px-4 rounded-2xl bg-white border-2 border-gray-300 border-b-4 text-gray-500 font-black shadow-sm active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-2"
               >
                 <RotateCcw size={18} strokeWidth={3} />

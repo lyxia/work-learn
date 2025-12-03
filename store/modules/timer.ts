@@ -3,6 +3,7 @@ import { create } from 'zustand';
 interface TimerState {
   isOpen: boolean;
   isActive: boolean;
+  wasActiveBeforePause: boolean;
   timeLeft: number;
   totalTime: number;
   getProgress: () => number;
@@ -12,11 +13,14 @@ interface TimerState {
   tickTimer: () => void;
   stopTimer: () => void;
   cancelTimer: () => void;
+  pauseTimer: () => void;
+  resumeTimer: () => void;
 }
 
 export const useTimerStore = create<TimerState>((set, get) => ({
   isOpen: false,
   isActive: false,
+  wasActiveBeforePause: false,
   timeLeft: 0,
   totalTime: 0,
   getProgress: () => {
@@ -34,6 +38,7 @@ export const useTimerStore = create<TimerState>((set, get) => ({
     set({
       isOpen: true,
       isActive: true,
+      wasActiveBeforePause: false,
       timeLeft: duration - 1, // 减1，避免多读1秒
       totalTime: duration,
     });
@@ -47,14 +52,35 @@ export const useTimerStore = create<TimerState>((set, get) => ({
   stopTimer: () => {
     set({
       isActive: false,
+      wasActiveBeforePause: false,
     });
   },
   cancelTimer: () => {
     set({
       isOpen: false,
       isActive: false,
+      wasActiveBeforePause: false,
       timeLeft: 0,
       totalTime: 0,
+    });
+  },
+  pauseTimer: () => {
+    const { isActive } = get();
+    if (!isActive) {
+      set({ wasActiveBeforePause: false });
+      return;
+    }
+
+    set({
+      isActive: false,
+      wasActiveBeforePause: true,
+    });
+  },
+  resumeTimer: () => {
+    const { wasActiveBeforePause, timeLeft } = get();
+    set({
+      isActive: wasActiveBeforePause && timeLeft > 0,
+      wasActiveBeforePause: false,
     });
   },
 }));

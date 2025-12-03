@@ -1,13 +1,40 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { useUIStore } from '../../store/modules/ui';
+import { useTimerStore } from '../../store/modules/timer';
+
+const resetUIState = () => {
+  useUIStore.setState((state) => ({
+    ...state,
+    settlementModal: { isOpen: false },
+    restModal: { isOpen: false },
+    vaultModal: { isOpen: false },
+    confirmModal: {
+      isOpen: false,
+      title: '',
+      message: '',
+      confirmLabel: '确定',
+      cancelLabel: '取消',
+      resolver: undefined,
+      shouldResumeFocusTimer: false,
+      showCancelButton: true,
+    },
+  }));
+};
+
+const resetTimerState = () => {
+  useTimerStore.setState({
+    isOpen: false,
+    isActive: false,
+    wasActiveBeforePause: false,
+    timeLeft: 0,
+    totalTime: 0,
+  });
+};
 
 describe('UI Store', () => {
   beforeEach(() => {
-    useUIStore.setState({
-      settlementModal: { isOpen: false },
-      restModal: { isOpen: false },
-      vaultModal: { isOpen: false },
-    });
+    resetUIState();
+    resetTimerState();
   });
 
   describe('初始状态', () => {
@@ -16,6 +43,7 @@ describe('UI Store', () => {
       expect(state.settlementModal.isOpen).toBe(false);
       expect(state.restModal.isOpen).toBe(false);
       expect(state.vaultModal.isOpen).toBe(false);
+      expect(state.confirmModal.isOpen).toBe(false);
     });
   });
 
@@ -64,19 +92,74 @@ describe('UI Store', () => {
     });
   });
 
+  describe('confirmModal', () => {
+    it('openConfirm 应展示确认弹窗并在确认后解析为 true', async () => {
+      const { openConfirm, confirmConfirmModal } = useUIStore.getState();
+      const confirmPromise = openConfirm({ message: '测试确认' });
+
+      expect(useUIStore.getState().confirmModal.isOpen).toBe(true);
+
+      confirmConfirmModal();
+
+      await expect(confirmPromise).resolves.toBe(true);
+      expect(useUIStore.getState().confirmModal.isOpen).toBe(false);
+    });
+
+    it('openConfirm 在取消后应该解析为 false', async () => {
+      const { openConfirm, cancelConfirmModal } = useUIStore.getState();
+      const confirmPromise = openConfirm({ message: '测试取消', title: '提示' });
+
+      expect(useUIStore.getState().confirmModal.isOpen).toBe(true);
+
+      cancelConfirmModal();
+
+      await expect(confirmPromise).resolves.toBe(false);
+      expect(useUIStore.getState().confirmModal.isOpen).toBe(false);
+    });
+
+    it('重复 openConfirm 应该关闭先前的 Promise', async () => {
+      const { openConfirm, cancelConfirmModal } = useUIStore.getState();
+      const firstPromise = openConfirm({ message: '第一次' });
+      const secondPromise = openConfirm({ message: '第二次' });
+
+      await expect(firstPromise).resolves.toBe(false);
+
+      cancelConfirmModal();
+
+      await expect(secondPromise).resolves.toBe(false);
+    });
+
+    it('打开确认弹窗时应暂停计时器并在关闭后恢复', async () => {
+      const timerStore = useTimerStore.getState();
+      timerStore.startTimer(10);
+
+      expect(useTimerStore.getState().isActive).toBe(true);
+
+      const { openConfirm, confirmConfirmModal } = useUIStore.getState();
+      const confirmPromise = openConfirm({ message: '暂停测试' });
+
+      expect(useTimerStore.getState().isActive).toBe(false);
+
+      confirmConfirmModal();
+      await confirmPromise;
+
+      expect(useTimerStore.getState().isActive).toBe(true);
+    });
+  });
+
   describe('closeAllModals', () => {
     it('应该关闭所有弹窗', () => {
       const { openSettlementModal, openRestModal, openVaultModal, closeAllModals } = useUIStore.getState();
       openSettlementModal();
       openRestModal();
       openVaultModal();
-      
+
       expect(useUIStore.getState().settlementModal.isOpen).toBe(true);
       expect(useUIStore.getState().restModal.isOpen).toBe(true);
       expect(useUIStore.getState().vaultModal.isOpen).toBe(true);
-      
+
       closeAllModals();
-      
+
       expect(useUIStore.getState().settlementModal.isOpen).toBe(false);
       expect(useUIStore.getState().restModal.isOpen).toBe(false);
       expect(useUIStore.getState().vaultModal.isOpen).toBe(false);
@@ -86,7 +169,7 @@ describe('UI Store', () => {
       const { openSettlementModal, closeAllModals } = useUIStore.getState();
       openSettlementModal();
       closeAllModals();
-      
+
       expect(useUIStore.getState().settlementModal.isOpen).toBe(false);
       expect(useUIStore.getState().restModal.isOpen).toBe(false);
       expect(useUIStore.getState().vaultModal.isOpen).toBe(false);
@@ -99,7 +182,7 @@ describe('UI Store', () => {
       openSettlementModal();
       openRestModal();
       openVaultModal();
-      
+
       const state = useUIStore.getState();
       expect(state.settlementModal.isOpen).toBe(true);
       expect(state.restModal.isOpen).toBe(true);
@@ -111,7 +194,7 @@ describe('UI Store', () => {
       openSettlementModal();
       openRestModal();
       closeSettlementModal();
-      
+
       expect(useUIStore.getState().settlementModal.isOpen).toBe(false);
       expect(useUIStore.getState().restModal.isOpen).toBe(true);
     });
