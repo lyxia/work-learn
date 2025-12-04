@@ -104,8 +104,8 @@ const CoinRecordModal: React.FC<CoinRecordModalProps> = ({ isOpen, onClose }) =>
   const handleDeleteRecord = async (record: CoinRecord) => {
     const detail = record.detail as IncomeDetail;
     const confirmed = await openConfirm({
-      title: '无效专注',
-      message: `确定将「${detail.taskName}」标记为无效专注吗？该记录将被删除，不会获得金币。`,
+      title: '删除',
+      message: `确定将「${detail.taskName}」删除？该记录将被删除，不会获得金币。`,
       confirmLabel: '确定删除',
       cancelLabel: '取消',
     });
@@ -191,7 +191,7 @@ const CoinRecordModal: React.FC<CoinRecordModalProps> = ({ isOpen, onClose }) =>
                 className="flex-1 py-2 rounded-xl bg-white border-2 border-gray-300 border-b-4 text-gray-500 font-bold active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-1"
               >
                 <Trash2 size={16} />
-                无效专注
+                删除
               </button>
               <button
                 onClick={() => handleConfirmRecord(record)}

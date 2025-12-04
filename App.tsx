@@ -126,6 +126,11 @@ const App: React.FC = () => {
           updateAccumulatedCoins(timePassed, currentTotalTime);
         }
 
+    // Play tick sound if timer is still running
+    if (currentTimeLeft > 0) {
+      soundEngine.playTick();
+    }
+
     // Check if timer finished
     if (currentTimeLeft === 0) {
       // Timer finished - complete current round
@@ -307,14 +312,16 @@ const App: React.FC = () => {
   return (
     // 修改: 确保容器占满全屏，使用 flex-col 布局，移除 items-center justify-center 以支持自然流
     <div className="min-h-screen flex flex-col font-sans text-gray-700 selection:bg-yellow-200 overflow-x-hidden">
-      {/* --- 全局静音按钮 (始终显示在最上层) --- */}
-      <button
-        onClick={handleMuteToggle}
-        className="fixed top-4 right-4 z-[100] w-10 h-10 bg-white rounded-full border-2 border-gray-300 flex items-center justify-center shadow-md active:scale-95 transition-transform"
-        aria-label={isMuted ? '取消静音' : '静音'}
-      >
-        {isMuted ? <VolumeX size={18} className="text-gray-400" /> : <Volume2 size={18} className="text-[#38BDF8]" />}
-      </button>
+      {/* --- 全局静音按钮 (金库弹窗打开时隐藏，避免遮挡退出按钮) --- */}
+      {!vaultModalOpen && (
+        <button
+          onClick={handleMuteToggle}
+          className="fixed top-4 right-4 z-[100] w-10 h-10 bg-white rounded-full border-2 border-gray-300 flex items-center justify-center shadow-md active:scale-95 transition-transform"
+          aria-label={isMuted ? '取消静音' : '静音'}
+        >
+          {isMuted ? <VolumeX size={18} className="text-gray-400" /> : <Volume2 size={18} className="text-[#38BDF8]" />}
+        </button>
+      )}
 
       {/* --- Header Bar --- */}
       <header className="fixed top-0 left-0 right-0 p-4 z-40 flex justify-between items-start pointer-events-none">
