@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Coins, Clock, Star } from 'lucide-react';
-import confetti from 'canvas-confetti';
 import { soundEngine } from '../utils/audio';
 
 interface SettlementModalProps {
@@ -26,41 +25,14 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
 
   const handleOpenChest = () => {
     if (stage !== 'closed') return;
-    
+
     setStage('opening');
     soundEngine.playChestOpen();
 
-    // Trigger confetti after a slight delay matching animation
+    // 简化：直接过渡到 revealed 状态
     setTimeout(() => {
       setStage('revealed');
-      fireConfetti();
-    }, 800);
-  };
-
-  const fireConfetti = () => {
-    const duration = 2000;
-    const end = Date.now() + duration;
-
-    (function frame() {
-      confetti({
-        particleCount: 5,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0 },
-        colors: ['#FCD34D', '#FDBA74', '#F472B6']
-      });
-      confetti({
-        particleCount: 5,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1 },
-        colors: ['#FCD34D', '#FDBA74', '#F472B6']
-      });
-
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
-      }
-    }());
+    }, 600);
   };
 
   return (
@@ -70,25 +42,8 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80"
         >
-          {/* --- Sunburst Background Effect (Only when revealed) --- */}
-          <AnimatePresence>
-            {stage === 'revealed' && (
-              <motion.div
-                 initial={{ opacity: 0, scale: 0 }}
-                 animate={{ opacity: 1, scale: 1.5 }}
-                 className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden"
-              >
-                 <div className="w-[200vw] h-[200vw] animate-spin-slow opacity-30"
-                      style={{
-                        background: 'repeating-conic-gradient(#FCD34D 0deg 10deg, transparent 10deg 20deg)'
-                      }}
-                 />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
           <div className="relative w-full max-w-md p-6 flex flex-col items-center z-10">
             
             {/* --- Header Text --- */}
@@ -121,13 +76,8 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
             <motion.div
               className="relative w-64 h-64 cursor-pointer"
               onClick={handleOpenChest}
-              whileHover={stage === 'closed' ? { scale: 1.05, rotate: [0, -2, 2, 0] } : {}}
-              whileTap={stage === 'closed' ? { scale: 0.95 } : {}}
-              animate={stage === 'opening' ? { 
-                scale: [1, 1.1, 0.9, 1.2], 
-                rotate: [0, -5, 5, 0],
-                transition: { duration: 0.8 } 
-              } : {}}
+              whileHover={stage === 'closed' ? { scale: 1.03 } : {}}
+              whileTap={stage === 'closed' ? { scale: 0.97 } : {}}
             >
                <svg viewBox="0 0 200 200" className="w-full h-full drop-shadow-2xl">
                  
@@ -152,9 +102,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                  
                  {/* Closed Lid */}
                  {stage !== 'revealed' && (
-                    <motion.g
-                       animate={stage === 'opening' ? { y: [-2, 2, -2] } : {}}
-                    >
+                    <g>
                        <path d="M15 90 Q100 40 185 90" fill="#D97706" stroke="#78350F" strokeWidth="4" />
                        <path d="M15 90 Q100 40 185 90" fill="url(#lidGradient)" opacity="0.5" />
                        <defs>
@@ -166,7 +114,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                        {/* Bands on Lid */}
                        <path d="M45 82 Q100 45 155 82" fill="none" stroke="#FCD34D" strokeWidth="20" strokeDasharray="20 60" strokeDashoffset="10" />
                        <path d="M45 82 Q100 45 155 82" fill="none" stroke="#B45309" strokeWidth="2" strokeDasharray="20 60" strokeDashoffset="10" />
-                    </motion.g>
+                    </g>
                  )}
 
                  {/* Open Lid (Back) */}
@@ -182,18 +130,18 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                  {/* Treasure (Inside) - Only visible when open */}
                  {stage === 'revealed' && (
                    <motion.g
-                     initial={{ y: 20, opacity: 0 }}
-                     animate={{ y: -20, opacity: 1 }}
-                     transition={{ type: "spring", bounce: 0.5 }}
+                     initial={{ opacity: 0 }}
+                     animate={{ opacity: 1 }}
+                     transition={{ duration: 0.3 }}
                    >
                       {/* Coins Piling */}
                       <circle cx="80" cy="80" r="15" fill="#FCD34D" stroke="#B45309" strokeWidth="2" />
                       <circle cx="120" cy="85" r="15" fill="#FCD34D" stroke="#B45309" strokeWidth="2" />
                       <circle cx="100" cy="70" r="15" fill="#FCD34D" stroke="#B45309" strokeWidth="2" />
-                      
+
                       {/* Sparkles */}
-                      <Star x="60" y="40" size={24} fill="white" className="animate-pulse text-yellow-200" />
-                      <Star x="140" y="50" size={16} fill="white" className="animate-pulse text-yellow-200 delay-100" />
+                      <Star x="60" y="40" size={24} fill="white" className="text-yellow-200" />
+                      <Star x="140" y="50" size={16} fill="white" className="text-yellow-200" />
                    </motion.g>
                  )}
 
@@ -208,10 +156,10 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
             <AnimatePresence>
               {stage === 'revealed' && (
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="w-full bg-white/10 backdrop-blur-md rounded-2xl p-6 mt-6 border-2 border-white/30 shadow-xl flex flex-col items-center gap-4"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.2 }}
+                  className="w-full bg-black/30 rounded-2xl p-6 mt-6 border-2 border-white/30 shadow-xl flex flex-col items-center gap-4"
                 >
                    {/* Main Coin Count */}
                    <div className="flex items-center gap-3">
@@ -221,7 +169,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                            +{totalCoins}
                          </span>
                          {bonusCoins > 0 && (
-                           <span className="text-xs font-bold text-white bg-[#F472B6] px-2 py-0.5 rounded-full self-start animate-bounce">
+                           <span className="text-xs font-bold text-white bg-[#F472B6] px-2 py-0.5 rounded-full self-start">
                              包含随机惊喜 +{bonusCoins}!
                            </span>
                          )}
