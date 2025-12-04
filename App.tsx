@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { Settings, Volume2, VolumeX, Coins, Clock, Zap, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
+import HomePage from './components/HomePage';
 import TimerModal from './components/TimerModal';
 import RestModal from './components/RestModal';
 import SettlementModal from './components/SettlementModal';
@@ -11,7 +10,6 @@ import SettingsModal from './components/SettingsModal';
 import ConfirmModal from './components/ConfirmModal';
 import PasswordInputModal from './components/PasswordInputModal';
 import CoinRecordModal from './components/CoinRecordModal';
-import Footer from './components/Footer';
 import { soundEngine } from './utils/audio';
 import {
   useUserDataStore,
@@ -261,15 +259,6 @@ const App: React.FC = () => {
     }
   };
 
-  const handleMuteToggle = () => {
-    const nextMuted = !isMuted;
-    soundEngine.setMuted(nextMuted);
-    toggleMute();
-    if (!nextMuted) {
-      soundEngine.playClick();
-    }
-  };
-
   const handleTimerCancel = async () => {
     const confirmed = await openConfirm({
       title: '放弃挑战',
@@ -310,139 +299,19 @@ const App: React.FC = () => {
   };
 
   return (
-    // 修改: 确保容器占满全屏，使用 flex-col 布局，移除 items-center justify-center 以支持自然流
-    <div className="min-h-screen flex flex-col font-sans text-gray-700 selection:bg-yellow-200 overflow-x-hidden">
-      {/* --- 全局静音按钮 (金库弹窗打开时隐藏，避免遮挡退出按钮) --- */}
-      {!vaultModalOpen && (
-        <button
-          onClick={handleMuteToggle}
-          className="fixed top-4 right-4 z-[100] w-10 h-10 bg-white rounded-full border-2 border-gray-300 flex items-center justify-center shadow-md active:scale-95 transition-transform"
-          aria-label={isMuted ? '取消静音' : '静音'}
-        >
-          {isMuted ? <VolumeX size={18} className="text-gray-400" /> : <Volume2 size={18} className="text-[#38BDF8]" />}
-        </button>
-      )}
-
-      {/* --- Header Bar --- */}
-      <header className="fixed top-0 left-0 right-0 p-4 z-40 flex justify-between items-start pointer-events-none">
-        {/* Left: Logo & Settings */}
-        <div className="flex items-center gap-2 pointer-events-auto">
-          <div className="bg-[#38BDF8] text-white px-4 py-2 rounded-full border-b-4 border-[#0284C7] shadow-lg flex items-center gap-2 transform hover:scale-105 transition-transform cursor-pointer">
-            <span className="text-2xl">🏝️</span>
-            <span className="font-display font-bold text-lg tracking-wider hidden md:inline">蛋仔专注岛</span>
-          </div>
-
-          <button
-            onClick={() => {
-              soundEngine.playClick();
-              openSettings();
-            }}
-            className="w-10 h-10 bg-white rounded-full border-2 border-gray-300 flex items-center justify-center shadow-sm hover:bg-gray-50 active:scale-95 transition-transform"
-            aria-label="Settings"
-          >
-            <Settings size={20} className="text-gray-500" />
-          </button>
-        </div>
-
-        {/* Right: Coin Display (留出静音按钮的空间) */}
-        <div className="flex gap-2 mr-12">
-          <button
-            onClick={handleVaultOpen}
-            className="pointer-events-auto bg-gray-800 text-[#FCD34D] px-4 py-2 rounded-full border-b-4 border-black shadow-lg flex items-center gap-2 font-display font-bold text-lg hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all"
-          >
-            <Coins fill="#FCD34D" stroke="#B45309" strokeWidth={2} />
-            <span>{coins}</span>
-          </button>
-        </div>
-      </header>
-
-      {/* --- Main Content Container --- */}
-      {/* 修改: 
-          - 增加 mt-20 (移动端避开 Header) / md:mt-16
-          - 调整底部留白: pb-10 (移动端) / md:pb-80 (桌面端)
-          - 增加 flex-grow 让它撑开高度
-          - mx-auto 居中
-      */}
-      <main className="w-full max-w-2xl px-4 relative z-0 mt-20 md:mt-16 pb-10 md:pb-80 mx-auto flex-grow flex flex-col justify-center">
-        {/* Input Section */}
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="bg-white p-2 rounded-[2rem] border-4 border-[#38BDF8] shadow-[0_8px_0_rgba(56,189,248,0.3)] mb-8"
-        >
-          <div className="relative">
-            <input
-              type="text"
-              value={taskName}
-              onChange={(e) => setTaskName(e.target.value)}
-              placeholder="今天要做什么挑战呢？（例如：写数学作业）"
-              className="w-full text-lg md:text-xl p-4 md:p-6 rounded-[1.5rem] border-2 border-dashed border-gray-300 focus:border-[#38BDF8] focus:ring-4 focus:ring-[#38BDF8]/20 outline-none text-center font-bold text-gray-600 placeholder-gray-300 transition-all"
-            />
-            {taskName && (
-              <motion.button
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                onClick={() => setTaskName('')}
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-gray-100 hover:bg-gray-200 p-2 rounded-full text-gray-400 hover:text-red-500 transition-colors"
-              >
-                <X size={20} />
-              </motion.button>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Duration Section */}
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="mb-8"
-        >
-          <div className="flex items-center gap-2 mb-4 ml-2">
-            <Clock className="text-gray-600" size={24} />
-            <h2 className="text-xl font-bold text-gray-700">预计需要多久？</h2>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {timerOptions.map((option) => (
-              <button
-                key={option.id}
-                onClick={() => handleSelectTime(option.id)}
-                className={`
-                  relative h-16 rounded-2xl font-bold text-white text-md md:text-lg
-                  transition-all duration-200 flex items-center justify-center text-center leading-tight
-                  shadow-[0_4px_0_rgba(0,0,0,0.2)] active:shadow-none active:translate-y-[4px]
-                  ${selectedTimeId === option.id
-                    ? 'ring-4 ring-white ring-offset-2 ring-offset-[#FEF9C3] scale-105 z-10'
-                    : 'hover:brightness-110'
-                  }
-                  ${option.color === 'blue'
-                    ? 'bg-gradient-to-b from-[#38BDF8] to-[#0284C7]'
-                    : 'bg-gradient-to-b from-[#F472B6] to-[#DB2777]'
-                  }
-                `}
-              >
-                {option.label}
-                {selectedTimeId === option.id && (
-                  <motion.div
-                    layoutId="check"
-                    className="absolute -top-2 -right-2 bg-yellow-400 text-white p-1 rounded-full shadow-sm border-2 border-white"
-                  >
-                    <Zap size={14} fill="white" />
-                  </motion.div>
-                )}
-              </button>
-            ))}
-          </div>
-        </motion.div>
-
-      </main>
-
-      {/* Footer with Character and Start Button */}
-      <Footer
-        onStart={() => {
-          void handleStart();
-        }}
+    // HomePage 已实现响应式布局，此处仅作为容器
+    <div className="min-h-screen font-sans text-text-main selection:bg-yellow-200 overflow-x-hidden">
+      {/* --- HomePage Component --- */}
+      <HomePage
+        taskName={taskName}
+        selectedTimeId={selectedTimeId}
+        timerOptions={timerOptions}
+        coins={coins}
+        onTaskNameChange={setTaskName}
+        onTimeSelect={handleSelectTime}
+        onStart={() => void handleStart()}
+        onSettingsOpen={openSettings}
+        onVaultOpen={handleVaultOpen}
       />
 
       {/* Focus Timer Modal */}
@@ -485,6 +354,8 @@ const App: React.FC = () => {
       <SettingsModal
         isOpen={isSettingsOpen}
         settings={settings}
+        isMuted={isMuted}
+        onToggleMute={toggleMute}
         onSave={handleSettingsSave}
         onReset={handleSettingsReset}
         onClose={closeSettings}

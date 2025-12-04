@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="一款游戏化的专注计时器，拥有可爱的蛋仔角色、金币奖励和AI驱动的激励机制。" />
-    <meta name="theme-color" content="#FEF9C3" />
+    <meta name="theme-color" content="#FFFDF5" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="专注岛" />
@@ -22,11 +22,19 @@
               display: ['"ZCOOL KuaiLe"', '"Varela Round"', '"Noto Sans SC"', 'sans-serif'],
             },
             colors: {
+              // 新设计系统
+              canvas: '#FFFDF5',
+              panel: '#A0D8C5',
+              primary: '#FFD54F',
+              'primary-dark': '#FFB300',
+              'text-main': '#5D4037',
+              'text-secondary': '#8D6E63',
+              // 保留原有颜色
               egg: {
                 yellow: '#FCD34D',
                 blue: '#38BDF8',
                 pink: '#F472B6',
-                bg: '#FEF9C3', // Light yellow bg
+                bg: '#FEF9C3',
                 dark: '#4B5563',
               }
             },
@@ -46,9 +54,21 @@
       }
     </script>
     <style>
+      :root {
+        --bg-canvas: #FFFDF5;
+        --bg-panel: #A0D8C5;
+        --color-primary: #FFD54F;
+        --color-primary-dark: #FFB300;
+        --text-main: #5D4037;
+        --text-secondary: #8D6E63;
+        --glass-white: rgba(255, 255, 255, 0.6);
+        --radius-card: 32px;
+        --radius-input: 24px;
+        --radius-button: 44px;
+      }
       body {
-        background-color: #FEF9C3;
-        background-image: radial-gradient(#FDE047 2px, transparent 2px);
+        background-color: var(--bg-canvas);
+        background-image: radial-gradient(#FFE082 2px, transparent 2px);
         background-size: 30px 30px;
         overflow-x: hidden;
       }
@@ -57,10 +77,10 @@
         width: 8px;
       }
       ::-webkit-scrollbar-track {
-        background: #FEF9C3;
+        background: var(--bg-canvas);
       }
       ::-webkit-scrollbar-thumb {
-        background: #FCD34D;
+        background: var(--color-primary);
         border-radius: 4px;
       }
       
@@ -80,7 +100,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: linear-gradient(135deg, #FEF9C3 0%, #FDE047 100%);
+        background: linear-gradient(135deg, var(--bg-canvas) 0%, var(--color-primary) 100%);
         z-index: 99999;
         flex-direction: column;
         justify-content: center;

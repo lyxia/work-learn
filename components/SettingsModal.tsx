@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Settings, RotateCcw, Check, Lock, KeyRound, Trash2 } from 'lucide-react';
+import { X, Settings, RotateCcw, Check, Lock, KeyRound, Trash2, Volume2, VolumeX } from 'lucide-react';
 import { AppSettings } from '../types';
 import { useParentAuthStore, useUIStore } from '../store';
+import { soundEngine } from '../utils/audio';
 
 interface SettingsModalProps {
   isOpen: boolean;
   settings: AppSettings;
+  isMuted: boolean;
+  onToggleMute: () => void;
   onSave: (newSettings: AppSettings) => void;
   onClose: () => void;
   onReset: () => void | Promise<void>;
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({
-  isOpen, settings, onSave, onClose, onReset
+  isOpen, settings, isMuted, onToggleMute, onSave, onClose, onReset
 }) => {
   const [timerOverride, setTimerOverride] = useState<string>('');
   const [restDuration, setRestDuration] = useState<string>('');
@@ -180,7 +183,40 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 </p>
               </div>
 
-              {/* Field 4: Parent Password */}
+              {/* Field 4: Sound Control */}
+              <div className="bg-white p-4 rounded-3xl border-4 border-[#E5E7EB] transition-colors shadow-sm">
+                <div className="flex items-center justify-between">
+                  <label className="text-[#78350F] font-black text-lg flex items-center gap-2">
+                    {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                    音效
+                  </label>
+                  <button
+                    onClick={() => {
+                      onToggleMute();
+                      if (isMuted) {
+                        // 即将开启音效，播放提示音
+                        setTimeout(() => soundEngine.playClick(), 50);
+                      }
+                    }}
+                    className={`
+                      relative w-14 h-8 rounded-full transition-all duration-200
+                      ${isMuted ? 'bg-gray-300' : 'bg-[#4ADE80]'}
+                    `}
+                  >
+                    <div
+                      className={`
+                        absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-all duration-200
+                        ${isMuted ? 'left-1' : 'left-7'}
+                      `}
+                    />
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400 font-bold mt-2">
+                  {isMuted ? '已静音，点击开启音效' : '音效已开启'}
+                </p>
+              </div>
+
+              {/* Field 5: Parent Password */}
               <div className="bg-white p-4 rounded-3xl border-4 border-[#E5E7EB] transition-colors shadow-sm">
                 <label className="block text-[#78350F] font-black mb-3 text-lg flex items-center gap-2">
                   <Lock size={20} />

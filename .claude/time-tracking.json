@@ -75,6 +75,47 @@
       "end_time": "2025-12-03T15:53:21Z",
       "duration_seconds": 308,
       "duration_formatted": "0h 5m"
+    },
+    "5ac94e28-04de-4345-b4d2-6285331efefd": {
+      "start_time": "2025-12-04T14:09:29Z",
+      "status": "completed",
+      "session_id": "5ac94e28-04de-4345-b4d2-6285331efefd",
+      "end_time": "2025-12-04T14:41:34Z",
+      "duration_seconds": 1925,
+      "duration_formatted": "0h 32m"
+    },
+    "a84d86cb-1d82-4862-a218-9597167ad93f": {
+      "end_time": "2025-12-04T14:11:49Z",
+      "status": "completed"
+    },
+    "cf968fbf-20d1-450c-a19f-1f8d2acca1b6": {
+      "start_time": "2025-12-04T14:42:03Z",
+      "status": "completed",
+      "session_id": "cf968fbf-20d1-450c-a19f-1f8d2acca1b6",
+      "end_time": "2025-12-04T14:58:45Z",
+      "duration_seconds": 1002,
+      "duration_formatted": "0h 16m"
+    },
+    "d3521963-4044-4a2f-9f13-cc9fd3d98bc7": {
+      "start_time": "2025-12-04T14:58:50Z",
+      "status": "completed",
+      "session_id": "d3521963-4044-4a2f-9f13-cc9fd3d98bc7",
+      "end_time": "2025-12-04T17:24:30Z",
+      "duration_seconds": 8740,
+      "duration_formatted": "2h 25m"
+    },
+    "58907ed3-15aa-48c6-880e-c62f2bebe3bf": {
+      "start_time": "2025-12-04T16:55:48Z",
+      "status": "completed",
+      "session_id": "58907ed3-15aa-48c6-880e-c62f2bebe3bf",
+      "end_time": "2025-12-04T17:24:27Z",
+      "duration_seconds": 1719,
+      "duration_formatted": "0h 28m"
+    },
+    "5e0f6866-7f00-4dfc-b041-10ef5cd33774": {
+      "start_time": "2025-12-04T17:24:35Z",
+      "status": "in_progress",
+      "session_id": "5e0f6866-7f00-4dfc-b041-10ef5cd33774"
     }
   }
 }

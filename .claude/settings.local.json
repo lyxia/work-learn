@@ -9,7 +9,11 @@
       "Bash(ls:*)",
       "mcp__ide__getDiagnostics",
       "Bash(GITHUB_ACTIONS=true npm run build:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(wc:*)",
+      "Bash(tree:*)",
+      "Bash(cat:*)",
+      "Bash(xargs ls:*)"
     ],
     "deny": [],
     "ask": []
