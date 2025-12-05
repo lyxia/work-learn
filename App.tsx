@@ -80,16 +80,18 @@ const App: React.FC = () => {
   const multiSessionTotalRounds = useMultiSessionStore((state) => state.totalRounds);
   const multiSessionCurrentRound = useMultiSessionStore((state) => state.currentRound);
   const multiSessionCompletedRounds = useMultiSessionStore((state) => state.completedRounds);
-  const multiSessionAccumulatedCoins = useMultiSessionStore((state) => state.accumulatedCoins);
+  const totalFocusedSeconds = useMultiSessionStore((state) => state.totalFocusedSeconds);
   const multiSessionIsActive = useMultiSessionStore((state) => state.isActive);
   const createSession = useMultiSessionStore((state) => state.createSession);
   const startNextRound = useMultiSessionStore((state) => state.startNextRound);
   const completeCurrentRound = useMultiSessionStore((state) => state.completeCurrentRound);
-  const updateAccumulatedCoins = useMultiSessionStore((state) => state.updateAccumulatedCoins);
+  const addFocusedSecond = useMultiSessionStore((state) => state.addFocusedSecond);
   const finishEarly = useMultiSessionStore((state) => state.finishEarly);
   const cancelSession = useMultiSessionStore((state) => state.cancel);
   const resetSession = useMultiSessionStore((state) => state.reset);
   const sessionStartTime = useMultiSessionStore((state) => state.sessionStartTime);
+
+  const calculateRewardsFromCurrentState = useSessionRewardsStore((state) => state.calculateRewardsFromCurrentState);
 
   const addPendingIncome = useCoinRecordStore((state) => state.addPendingIncome);
 
@@ -116,13 +118,12 @@ const App: React.FC = () => {
     tickTimer();
     const timerState = useTimerStore.getState();
     const currentTimeLeft = timerState.timeLeft;
-    const currentTotalTime = timerState.totalTime;
-    const timePassed = currentTotalTime - currentTimeLeft;
-    
-        // Update accumulated coins if multi-session is active
-        if (useMultiSessionStore.getState().isActive) {
-          updateAccumulatedCoins(timePassed, currentTotalTime);
-        }
+
+    // 累加专注秒数并实时计算金币
+    if (useMultiSessionStore.getState().isActive) {
+      addFocusedSecond();
+      calculateRewardsFromCurrentState();
+    }
 
     // Play tick sound if timer is still running
     if (currentTimeLeft > 0) {
@@ -132,13 +133,10 @@ const App: React.FC = () => {
     // Check if timer finished
     if (currentTimeLeft === 0) {
       // Timer finished - complete current round
-      const settingsState = useSettingsStore.getState();
-      const roundDuration = settingsState.settings.timerOverride > 0 ? settingsState.settings.timerOverride : 1;
-      const roundCoins = Math.ceil(roundDuration * 5);
-      completeCurrentRound(roundCoins);
+      completeCurrentRound();
       soundEngine.playSuccess();
     }
-  }, [tickTimer, updateAccumulatedCoins, completeCurrentRound]);
+  }, [tickTimer, addFocusedSecond, calculateRewardsFromCurrentState, completeCurrentRound]);
 
   useEffect(() => {
     if (!timerIsActive || timeLeft <= 0) {
@@ -204,7 +202,7 @@ const App: React.FC = () => {
 
   const handleSettlementClose = () => {
     // 创建待确认收入记录（不再直接入账）
-    const totalDuration = multiSessionCompletedRounds * (settings.timerOverride || 1);
+    const totalDuration = totalFocusedSeconds / 60;
     addPendingIncome(
       {
         taskName: multiSessionTaskName,
@@ -322,7 +320,7 @@ const App: React.FC = () => {
         taskName={multiSessionIsActive ? multiSessionTaskName : taskName}
         currentRound={multiSessionIsActive ? multiSessionCurrentRound : 0}
         totalRounds={multiSessionIsActive ? multiSessionTotalRounds : 0}
-        accumulatedCoins={multiSessionIsActive ? multiSessionAccumulatedCoins : 0}
+        baseCoins={baseCoins}
         onCancel={handleTimerCancel}
         onFinishEarly={handleFinishEarly}
       />
@@ -332,7 +330,7 @@ const App: React.FC = () => {
         isOpen={settlementModalOpen}
         baseCoins={baseCoins}
         bonusCoins={bonusCoins}
-        duration={multiSessionIsActive ? multiSessionCompletedRounds * (settings.timerOverride || 1) : Math.ceil(totalTime / 60)}
+        duration={totalFocusedSeconds / 60}
         onClose={handleSettlementClose}
       />
 
@@ -342,7 +340,7 @@ const App: React.FC = () => {
         taskName={multiSessionTaskName}
         completedRounds={multiSessionCompletedRounds}
         totalRounds={multiSessionTotalRounds}
-        accumulatedCoins={multiSessionAccumulatedCoins}
+        baseCoins={baseCoins}
         duration={settings.restDuration}
         onComplete={handleRestComplete}
       />

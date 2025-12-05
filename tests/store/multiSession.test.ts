@@ -22,31 +22,31 @@ describe('MultiSession Store', () => {
       restDuration: 300,
       timerOverride: 1,
     });
-    
+
     useTimerStore.setState({
       isOpen: false,
       isActive: false,
       timeLeft: 0,
       totalTime: 0,
     });
-    
+
     useSessionRewardsStore.setState({
       baseCoins: 0,
       bonusCoins: 0,
     });
-    
+
     useUIStore.setState({
       settlementModal: { isOpen: false },
       restModal: { isOpen: false },
       vaultModal: { isOpen: false },
     });
-    
+
     useMultiSessionStore.setState({
       taskName: '',
       totalRounds: 0,
       currentRound: 0,
       completedRounds: 0,
-      accumulatedCoins: 0,
+      totalFocusedSeconds: 0,
       isActive: false,
     });
   });
@@ -58,7 +58,7 @@ describe('MultiSession Store', () => {
       expect(state.totalRounds).toBe(0);
       expect(state.currentRound).toBe(0);
       expect(state.completedRounds).toBe(0);
-      expect(state.accumulatedCoins).toBe(0);
+      expect(state.totalFocusedSeconds).toBe(0);
       expect(state.isActive).toBe(false);
     });
   });
@@ -72,7 +72,7 @@ describe('MultiSession Store', () => {
       expect(state.totalRounds).toBe(10);
       expect(state.currentRound).toBe(1);
       expect(state.completedRounds).toBe(0);
-      expect(state.accumulatedCoins).toBe(0);
+      expect(state.totalFocusedSeconds).toBe(0);
       expect(state.isActive).toBe(true);
     });
 
@@ -107,6 +107,16 @@ describe('MultiSession Store', () => {
       expect(timerState.isOpen).toBe(true);
       expect(timerState.isActive).toBe(true);
       expect(timerState.timeLeft).toBe(59); // 1分钟 = 60秒，启动时减1避免多读1秒
+    });
+
+    it('应该重置 sessionRewards', () => {
+      // 先设置一些旧值
+      useSessionRewardsStore.setState({ baseCoins: 100, bonusCoins: 50 });
+      const { createSession } = useMultiSessionStore.getState();
+      createSession('数学作业', 10, 1);
+      const rewardsState = useSessionRewardsStore.getState();
+      expect(rewardsState.baseCoins).toBe(0);
+      expect(rewardsState.bonusCoins).toBe(0);
     });
   });
 
@@ -148,119 +158,89 @@ describe('MultiSession Store', () => {
     });
   });
 
+  describe('addFocusedSecond', () => {
+    it('应该累加专注秒数', () => {
+      const { createSession, addFocusedSecond } = useMultiSessionStore.getState();
+      createSession('数学作业', 10, 1);
+      addFocusedSecond();
+      expect(useMultiSessionStore.getState().totalFocusedSeconds).toBe(1);
+      addFocusedSecond();
+      expect(useMultiSessionStore.getState().totalFocusedSeconds).toBe(2);
+    });
+
+    it('应该在多轮之间持续累加', () => {
+      const { createSession, addFocusedSecond } = useMultiSessionStore.getState();
+      createSession('数学作业', 10, 1);
+      // 模拟第一轮专注60秒
+      for (let i = 0; i < 60; i++) {
+        addFocusedSecond();
+      }
+      expect(useMultiSessionStore.getState().totalFocusedSeconds).toBe(60);
+      // 模拟第二轮专注30秒
+      for (let i = 0; i < 30; i++) {
+        addFocusedSecond();
+      }
+      expect(useMultiSessionStore.getState().totalFocusedSeconds).toBe(90);
+    });
+  });
+
   describe('completeCurrentRound', () => {
-    it('应该更新累计金币和完成轮数', () => {
+    it('应该更新完成轮数', () => {
       const { createSession, completeCurrentRound } = useMultiSessionStore.getState();
       createSession('数学作业', 10, 1);
-      completeCurrentRound(5); // 当前轮获得5金币
+      completeCurrentRound();
       const state = useMultiSessionStore.getState();
-      expect(state.accumulatedCoins).toBe(5);
       expect(state.completedRounds).toBe(1);
     });
 
     it('如果不是最后一轮，应该打开休息弹窗', () => {
       const { createSession, completeCurrentRound } = useMultiSessionStore.getState();
       createSession('数学作业', 10, 1);
-      completeCurrentRound(5);
+      completeCurrentRound();
       expect(useUIStore.getState().restModal.isOpen).toBe(true);
       expect(useUIStore.getState().settlementModal.isOpen).toBe(false);
     });
 
-    it('如果是最后一轮，应该打开结算弹窗', () => {
-      const { createSession, completeCurrentRound } = useMultiSessionStore.getState();
+    it('如果是最后一轮，应该打开结算弹窗并计算随机奖励', () => {
+      const { createSession, completeCurrentRound, addFocusedSecond } = useMultiSessionStore.getState();
       createSession('数学作业', 2, 1); // 总共2轮
+      // 模拟专注了120秒（2分钟）
+      for (let i = 0; i < 120; i++) {
+        addFocusedSecond();
+      }
       useMultiSessionStore.setState({ currentRound: 2 });
-      completeCurrentRound(5);
+      completeCurrentRound();
       expect(useUIStore.getState().settlementModal.isOpen).toBe(true);
-    });
-
-    it('最后一轮应该计算总奖励', () => {
-      const { createSession, completeCurrentRound } = useMultiSessionStore.getState();
-      createSession('数学作业', 2, 1); // 总共2轮，每轮1分钟
-      useMultiSessionStore.setState({ currentRound: 2 });
-      completeCurrentRound(5);
-      const rewardsState = useSessionRewardsStore.getState();
-      // 总时长2分钟，基础奖励应该是10金币
-      expect(rewardsState.baseCoins).toBe(10);
-    });
-  });
-
-  describe('updateAccumulatedCoins', () => {
-    it('应该实时更新累计金币', () => {
-      const { createSession, updateAccumulatedCoins } = useMultiSessionStore.getState();
-      createSession('数学作业', 10, 1);
-      // 模拟已过去30秒（0.5分钟）
-      updateAccumulatedCoins(30, 60);
-      // 当前轮次金币：Math.floor(0.5 * 5) = 2
-      expect(useMultiSessionStore.getState().accumulatedCoins).toBe(2);
-    });
-
-    it('应该累加已完成轮次的金币', () => {
-      const { createSession, updateAccumulatedCoins } = useMultiSessionStore.getState();
-      createSession('数学作业', 10, 1);
-      useMultiSessionStore.setState({ completedRounds: 2 });
-      // 已完成2轮，每轮5金币 = 10金币
-      // 当前轮次已过去30秒 = 2金币
-      updateAccumulatedCoins(30, 60);
-      expect(useMultiSessionStore.getState().accumulatedCoins).toBe(12);
+      // bonusCoins 应该被计算（随机值）
+      expect(useSessionRewardsStore.getState().bonusCoins).toBeGreaterThanOrEqual(1);
     });
   });
 
   describe('finishEarly', () => {
     it('应该打开结算弹窗', () => {
-      const { createSession, finishEarly } = useMultiSessionStore.getState();
+      const { createSession, finishEarly, addFocusedSecond } = useMultiSessionStore.getState();
       createSession('数学作业', 10, 1);
-      useMultiSessionStore.setState({ completedRounds: 3, accumulatedCoins: 15 });
+      // 模拟专注了30秒
+      for (let i = 0; i < 30; i++) {
+        addFocusedSecond();
+      }
       finishEarly();
       expect(useUIStore.getState().settlementModal.isOpen).toBe(true);
     });
 
-    it('应该计算已完成轮次的总奖励', () => {
-      const { createSession, finishEarly } = useMultiSessionStore.getState();
+    it('应该计算随机奖励', () => {
+      const { createSession, finishEarly, addFocusedSecond } = useMultiSessionStore.getState();
       createSession('数学作业', 10, 1);
-      useMultiSessionStore.setState({ completedRounds: 3 });
-      // 设置 timer 状态：当前轮次刚开始，已过去0秒
-      useTimerStore.setState({ totalTime: 60, timeLeft: 60 });
+      // 模拟专注了60秒（1分钟）
+      for (let i = 0; i < 60; i++) {
+        addFocusedSecond();
+      }
+      // 先计算 baseCoins
+      useSessionRewardsStore.getState().calculateRewardsFromCurrentState();
       finishEarly();
       const rewardsState = useSessionRewardsStore.getState();
-      // 已完成3轮，每轮1分钟，总时长3分钟，基础奖励15金币
-      expect(rewardsState.baseCoins).toBe(15);
-    });
-
-    it('第一轮提前完成时应该计算当前轮次已过去时间的金币', () => {
-      const { createSession, finishEarly } = useMultiSessionStore.getState();
-      createSession('数学作业', 10, 1); // 10轮，每轮1分钟
-      // 模拟第一轮进行了30秒（completedRounds = 0）
-      useTimerStore.setState({ totalTime: 60, timeLeft: 30 }); // 已过去30秒
-      finishEarly();
-      const rewardsState = useSessionRewardsStore.getState();
-      // 已过去30秒 = 0.5分钟，基础奖励 = ceil(0.5 * 5) = 3金币
-      expect(rewardsState.baseCoins).toBe(3);
-    });
-
-    it('第二轮提前完成时应该计算已完成轮次+当前轮次的金币', () => {
-      const { createSession, finishEarly } = useMultiSessionStore.getState();
-      createSession('数学作业', 10, 1); // 10轮，每轮1分钟
-      // 模拟已完成1轮，当前第2轮进行了30秒
-      useMultiSessionStore.setState({ completedRounds: 1, currentRound: 2 });
-      useTimerStore.setState({ totalTime: 60, timeLeft: 30 }); // 当前轮已过去30秒
-      finishEarly();
-      const rewardsState = useSessionRewardsStore.getState();
-      // 已完成1轮 = 1分钟 + 当前轮0.5分钟 = 1.5分钟
-      // 基础奖励 = ceil(1.5 * 5) = 8金币
-      expect(rewardsState.baseCoins).toBe(8);
-    });
-
-    it('刚开始就提前完成时金币应该为0或最小值', () => {
-      const { createSession, finishEarly } = useMultiSessionStore.getState();
-      createSession('数学作业', 10, 1);
-      // 模拟刚开始（timeLeft = totalTime，已过去0秒）
-      useTimerStore.setState({ totalTime: 60, timeLeft: 60 });
-      finishEarly();
-      const rewardsState = useSessionRewardsStore.getState();
-      // 已过去0秒，totalDuration = 0，不会调用 calculateRewards
-      // baseCoins 保持默认值 0
-      expect(rewardsState.baseCoins).toBe(0);
+      // bonusCoins 应该被计算（随机值）
+      expect(rewardsState.bonusCoins).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -276,16 +256,17 @@ describe('MultiSession Store', () => {
 
   describe('reset', () => {
     it('应该重置所有状态', () => {
-      const { createSession, reset } = useMultiSessionStore.getState();
+      const { createSession, reset, addFocusedSecond } = useMultiSessionStore.getState();
       createSession('数学作业', 10, 1);
-      useMultiSessionStore.setState({ accumulatedCoins: 50 });
+      addFocusedSecond();
+      addFocusedSecond();
       reset();
       const state = useMultiSessionStore.getState();
       expect(state.taskName).toBe('');
       expect(state.totalRounds).toBe(0);
       expect(state.currentRound).toBe(0);
       expect(state.completedRounds).toBe(0);
-      expect(state.accumulatedCoins).toBe(0);
+      expect(state.totalFocusedSeconds).toBe(0);
       expect(state.isActive).toBe(false);
     });
 
@@ -315,67 +296,91 @@ describe('MultiSession Store 集成测试', () => {
       restDuration: 300,
       timerOverride: 1,
     });
-    
+
     useTimerStore.setState({
       isOpen: false,
       isActive: false,
       timeLeft: 0,
       totalTime: 0,
     });
-    
+
     useSessionRewardsStore.setState({
       baseCoins: 0,
       bonusCoins: 0,
     });
-    
+
     useUIStore.setState({
       settlementModal: { isOpen: false },
       restModal: { isOpen: false },
       vaultModal: { isOpen: false },
     });
-    
+
     useMultiSessionStore.setState({
       taskName: '',
       totalRounds: 0,
       currentRound: 0,
       completedRounds: 0,
-      accumulatedCoins: 0,
+      totalFocusedSeconds: 0,
       isActive: false,
     });
   });
 
   it('应该完整执行多轮学习流程', () => {
+    const { createSession, completeCurrentRound, startNextRound, addFocusedSecond } = useMultiSessionStore.getState();
+    const { calculateRewardsFromCurrentState } = useSessionRewardsStore.getState();
+
     // 1. 创建会话
-    useMultiSessionStore.getState().createSession('数学作业', 3, 1); // 3轮，每轮1分钟
+    createSession('数学作业', 3, 1); // 3轮，每轮1分钟
     expect(useMultiSessionStore.getState().isActive).toBe(true);
     expect(useMultiSessionStore.getState().currentRound).toBe(1);
     expect(useTimerStore.getState().isActive).toBe(true);
 
+    // 模拟第1轮专注60秒
+    for (let i = 0; i < 60; i++) {
+      addFocusedSecond();
+      calculateRewardsFromCurrentState();
+    }
+    expect(useSessionRewardsStore.getState().baseCoins).toBe(5); // 1分钟 * 5 = 5
+
     // 2. 完成第1轮
-    useMultiSessionStore.getState().completeCurrentRound(5);
+    completeCurrentRound();
     expect(useMultiSessionStore.getState().completedRounds).toBe(1);
     expect(useUIStore.getState().restModal.isOpen).toBe(true);
 
     // 3. 开始第2轮
     useUIStore.getState().closeRestModal();
-    useMultiSessionStore.getState().startNextRound();
+    startNextRound();
     expect(useMultiSessionStore.getState().currentRound).toBe(2);
 
+    // 模拟第2轮专注60秒
+    for (let i = 0; i < 60; i++) {
+      addFocusedSecond();
+      calculateRewardsFromCurrentState();
+    }
+    expect(useSessionRewardsStore.getState().baseCoins).toBe(10); // 2分钟 * 5 = 10
+
     // 4. 完成第2轮
-    useMultiSessionStore.getState().completeCurrentRound(5);
+    completeCurrentRound();
     expect(useMultiSessionStore.getState().completedRounds).toBe(2);
     expect(useUIStore.getState().restModal.isOpen).toBe(true);
 
     // 5. 开始第3轮（最后一轮）
     useUIStore.getState().closeRestModal();
-    useMultiSessionStore.getState().startNextRound();
+    startNextRound();
     expect(useMultiSessionStore.getState().currentRound).toBe(3);
 
+    // 模拟第3轮专注60秒
+    for (let i = 0; i < 60; i++) {
+      addFocusedSecond();
+      calculateRewardsFromCurrentState();
+    }
+    expect(useSessionRewardsStore.getState().baseCoins).toBe(15); // 3分钟 * 5 = 15
+
     // 6. 完成第3轮
-    useMultiSessionStore.getState().completeCurrentRound(5);
+    completeCurrentRound();
     expect(useMultiSessionStore.getState().completedRounds).toBe(3);
     expect(useUIStore.getState().settlementModal.isOpen).toBe(true);
-    expect(useSessionRewardsStore.getState().baseCoins).toBe(15); // 3分钟 * 5 = 15
+    expect(useSessionRewardsStore.getState().baseCoins).toBe(15);
+    expect(useSessionRewardsStore.getState().bonusCoins).toBeGreaterThanOrEqual(1);
   });
 });
-

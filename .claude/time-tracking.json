@@ -114,8 +114,26 @@
     },
     "5e0f6866-7f00-4dfc-b041-10ef5cd33774": {
       "start_time": "2025-12-04T17:24:35Z",
+      "status": "completed",
+      "session_id": "5e0f6866-7f00-4dfc-b041-10ef5cd33774",
+      "end_time": "2025-12-04T17:27:25Z",
+      "duration_seconds": 170,
+      "duration_formatted": "0h 2m"
+    },
+    "a68d5000-badf-4ceb-8d60-3a4173d87e7e": {
+      "start_time": "2025-12-05T02:44:04Z",
       "status": "in_progress",
-      "session_id": "5e0f6866-7f00-4dfc-b041-10ef5cd33774"
+      "session_id": "a68d5000-badf-4ceb-8d60-3a4173d87e7e"
+    },
+    "91ee9deb-6743-4da9-ae3c-a3fa90a26549": {
+      "start_time": "2025-12-05T07:05:56Z",
+      "status": "in_progress",
+      "session_id": "91ee9deb-6743-4da9-ae3c-a3fa90a26549"
+    },
+    "940549b6-5e77-49bd-8640-8133c6e68433": {
+      "start_time": "2025-12-05T08:03:24Z",
+      "status": "in_progress",
+      "session_id": "940549b6-5e77-49bd-8640-8133c6e68433"
     }
   }
 }

@@ -10,7 +10,7 @@ interface TimerModalProps {
   taskName: string;
   currentRound: number;
   totalRounds: number;
-  accumulatedCoins: number;
+  baseCoins: number;
   onCancel: () => void | Promise<void>;
   onFinishEarly?: () => void | Promise<void>;
 }
@@ -22,7 +22,7 @@ const TimerModal: React.FC<TimerModalProps> = ({
   taskName,
   currentRound,
   totalRounds,
-  accumulatedCoins,
+  baseCoins,
   onCancel,
   onFinishEarly,
 }) => {
@@ -79,13 +79,13 @@ const TimerModal: React.FC<TimerModalProps> = ({
           <div className="mb-8 flex flex-col items-center">
             <div className="text-gray-400 font-bold mb-2 text-sm tracking-widest uppercase">本次产出</div>
             <motion.div
-              key={accumulatedCoins}
+              key={baseCoins}
               initial={{ scale: 1.2, color: '#FCD34D' }}
               animate={{ scale: 1, color: '#4B5563' }}
               className="flex items-center gap-3 text-4xl font-black font-display text-gray-700 bg-white/50 px-8 py-3 rounded-full border-2 border-white shadow-sm"
             >
               <Coins size={36} className="text-[#FCD34D] drop-shadow-sm" fill="#FCD34D" />
-              <span>+{accumulatedCoins}</span>
+              <span>+{baseCoins}</span>
             </motion.div>
           </div>
 

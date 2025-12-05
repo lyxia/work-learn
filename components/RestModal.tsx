@@ -10,7 +10,7 @@ interface RestModalProps {
   taskName?: string;
   completedRounds?: number;
   totalRounds?: number;
-  accumulatedCoins?: number;
+  baseCoins?: number;
   duration: number; // Duration in seconds
   onComplete: () => void;
 }
@@ -20,7 +20,7 @@ const RestModal: React.FC<RestModalProps> = ({
   taskName,
   completedRounds = 0,
   totalRounds = 0,
-  accumulatedCoins = 0,
+  baseCoins = 0,
   duration,
   onComplete,
 }) => {
@@ -224,7 +224,7 @@ const RestModal: React.FC<RestModalProps> = ({
             )}
 
             {/* Accumulated Coins */}
-            {accumulatedCoins > 0 && (
+            {baseCoins > 0 && (
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -232,7 +232,7 @@ const RestModal: React.FC<RestModalProps> = ({
               >
                 <Coins size={24} className="text-[#FCD34D]" fill="#FCD34D" />
                 <span className="text-2xl font-black text-[#BE185D] font-display">
-                  已赚 {accumulatedCoins} 金币
+                  已赚 {baseCoins} 金币
                 </span>
               </motion.div>
             )}

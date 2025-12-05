@@ -6,8 +6,8 @@ test.describe('多轮会话不整除轮次修复验证', () => {
   test('总时长不能被每轮时长整除时，应该向上取整并正确分配时间', async ({ page }) => {
     await page.goto('/');
 
-    // 1. 打开设置
-    await page.click('button[aria-label="Settings"]');
+    // 1. 打开设置 - 点击包含 Settings 图标的按钮
+    await page.locator('button:has(svg.lucide-settings)').first().click();
     await expect(page.locator('text=开发者设置')).toBeVisible();
 
     // 2. 设置每轮时长为 0.4 分钟 (24秒)
@@ -34,14 +34,18 @@ test.describe('多轮会话不整除轮次修复验证', () => {
     // 等待页面更新
     await page.waitForTimeout(500);
 
-    // 6. 输入任务名
-    await page.fill('input[placeholder*="今天要做什么"]', '测试不整除轮次');
+    // 6. 输入任务名 - 使用更灵活的选择器
+    await page.locator('input[type="text"][placeholder]').first().fill('测试不整除轮次');
 
-    // 7. 选择 1 分钟选项（如果还没选中）
-    await page.click('button:has-text("1分钟")');
+    // 7. 选择 1 分钟选项（设置后只有一个选项，应该已被选中）
+    // 如果有多个选项，点击包含 "1" 的时间选择按钮
+    const timeButton = page.locator('button:has-text("1")').first();
+    if (await timeButton.isVisible()) {
+      await timeButton.click();
+    }
 
     // 8. 点击 "启动金币生产线!" 按钮开始
-    await page.click('text=启动金币生产线');
+    await page.click('text=启动金币生产线！');
 
     // 8. 验证进入计时页面，显示轮次信息
     // 1 / 0.4 = 2.5 → 3 轮

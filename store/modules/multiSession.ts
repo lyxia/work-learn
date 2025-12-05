@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { useSettingsStore } from './settings';
 import { useTimerStore } from './timer';
 import { useSessionRewardsStore } from './sessionRewards';
 import { useUIStore } from './ui';
@@ -9,15 +8,15 @@ interface MultiSessionState {
   totalRounds: number;
   currentRound: number;
   completedRounds: number;
-  accumulatedCoins: number;
+  totalFocusedSeconds: number; // 累计专注秒数
   isActive: boolean;
   roundDuration: number; // 标准每轮时长（分钟）
   lastRoundDuration: number; // 最后一轮时长（分钟），可能与标准时长不同
   sessionStartTime: number; // 会话开始时间戳
   createSession: (taskName: string, totalDuration: number, roundDuration: number) => void;
   startNextRound: () => void;
-  completeCurrentRound: (roundCoins: number) => void;
-  updateAccumulatedCoins: (timePassed: number, totalTime: number) => void;
+  completeCurrentRound: () => void;
+  addFocusedSecond: () => void;
   finishEarly: () => void;
   cancel: () => void;
   reset: () => void;
@@ -28,7 +27,7 @@ export const useMultiSessionStore = create<MultiSessionState>((set, get) => ({
   totalRounds: 0,
   currentRound: 0,
   completedRounds: 0,
-  accumulatedCoins: 0,
+  totalFocusedSeconds: 0,
   isActive: false,
   roundDuration: 0,
   lastRoundDuration: 0,
@@ -47,12 +46,15 @@ export const useMultiSessionStore = create<MultiSessionState>((set, get) => ({
     // 转回分钟存储（保持接口兼容）
     const lastRoundDuration = lastRoundDurationSeconds / 60;
 
+    // 重置 sessionRewards，确保干净状态
+    useSessionRewardsStore.getState().resetSession();
+
     set({
       taskName,
       totalRounds,
       currentRound: 1,
       completedRounds: 0,
-      accumulatedCoins: 0,
+      totalFocusedSeconds: 0,
       isActive: true,
       roundDuration,
       lastRoundDuration,
@@ -75,46 +77,31 @@ export const useMultiSessionStore = create<MultiSessionState>((set, get) => ({
       timerStore.startTimer(Math.round(nextRoundDuration * 60));
     }
   },
-  completeCurrentRound: (roundCoins: number) => {
-    const { currentRound, totalRounds, accumulatedCoins, roundDuration, lastRoundDuration } = get();
-    const newAccumulatedCoins = accumulatedCoins + roundCoins;
+  completeCurrentRound: () => {
+    const { currentRound, totalRounds } = get();
     const newCompletedRounds = get().completedRounds + 1;
 
-    set({
-      accumulatedCoins: newAccumulatedCoins,
-      completedRounds: newCompletedRounds,
-    });
+    set({ completedRounds: newCompletedRounds });
 
     // 判断是否是最后一轮
     if (currentRound === totalRounds) {
-      // 最后一轮：计算总奖励并打开结算弹窗
-      // 总时长 = (总轮数-1) * 标准轮时长 + 最后一轮时长
-      const totalDuration = (totalRounds - 1) * roundDuration + lastRoundDuration;
-      useSessionRewardsStore.getState().calculateRewards(totalDuration);
+      // 最后一轮：计算随机奖励并打开结算弹窗（baseCoins 已通过 tick 实时更新）
+      useSessionRewardsStore.getState().calculateBonusCoins();
       useUIStore.getState().openSettlementModal();
     } else {
-      // 不是最后一轮：进入休息页面
+      // 不是最后一轮：进入休息页面（baseCoins 已通过 tick 实时更新）
       useUIStore.getState().openRestModal();
     }
   },
-  updateAccumulatedCoins: (timePassed: number, totalTime: number) => {
-    // timePassed: 已过去的时间（秒）
-    // totalTime: 当前轮次总时间（秒）
-    // 实时显示累计金币：Math.floor((timePassed / 60) * 5)
-    const currentRoundCoins = Math.floor((timePassed / 60) * 5);
-    const { completedRounds, roundDuration } = get();
-    // 累计金币 = 已完成轮次的金币 + 当前轮次实时金币
-    const effectiveRoundDuration = roundDuration || useSettingsStore.getState().settings.timerOverride || 1;
-    const completedRoundsCoins = completedRounds * Math.ceil(effectiveRoundDuration * 5);
-    set({
-      accumulatedCoins: completedRoundsCoins + currentRoundCoins,
-    });
+  addFocusedSecond: () => {
+    set((state) => ({ totalFocusedSeconds: state.totalFocusedSeconds + 1 }));
   },
   finishEarly: () => {
     // 提前完成：停止计时器，计算奖励并打开结算弹窗
     const timerStore = useTimerStore.getState();
     timerStore.stopTimer();
-    useSessionRewardsStore.getState().calculateRewardsFromCurrentState();
+    // 计算最终奖励（baseCoins 已实时更新，这里只需计算随机奖励）
+    useSessionRewardsStore.getState().calculateBonusCoins();
     useUIStore.getState().openSettlementModal();
   },
   cancel: () => {
@@ -129,7 +116,7 @@ export const useMultiSessionStore = create<MultiSessionState>((set, get) => ({
       totalRounds: 0,
       currentRound: 0,
       completedRounds: 0,
-      accumulatedCoins: 0,
+      totalFocusedSeconds: 0,
       isActive: false,
       roundDuration: 0,
       lastRoundDuration: 0,

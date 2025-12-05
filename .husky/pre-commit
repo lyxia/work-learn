@@ -1,0 +1,5 @@
+echo "Running unit tests..."
+npm run test -- --run
+
+echo "Running e2e tests..."
+npm run test:e2e

@@ -12,7 +12,8 @@
     "test:coverage": "vitest --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed"
+    "test:e2e:headed": "playwright test --headed",
+    "prepare": "husky"
   },
   "dependencies": {
     "@google/genai": "^1.30.0",
@@ -28,6 +29,7 @@
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "@vitest/ui": "^4.0.14",
+    "husky": "^9.1.7",
     "jsdom": "^27.2.0",
     "sharp": "^0.34.5",
     "typescript": "~5.8.2",
